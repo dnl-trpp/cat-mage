@@ -6,9 +6,20 @@
 		<style>
 			body { margin: 0; }
 		</style>
+		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
-		<script src="js/three.js"></script>
-		<script src="js/main.js"></script>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./js/three.module.js"
+					
+				}
+			}
+		</script>
+		<script type="module" src="js/main.js"></script>
+		<div id="Menu">
+		<a href="#" id="startGame" class="btn-flip" data-back="Play" data-front="Play"></a>
+		</div>
 	</body>
 </html>
