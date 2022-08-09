@@ -15,11 +15,16 @@ var PressedKeys = {
     S:false,
     D:false,
     W:false,
+    Q:false,
+    E:false,
+    Space:false
 }
 
 var GameOptions = {
     forwardSpeed: 0.1,
-    cameraSpeedX: 0.05
+    cameraSpeedX: 0.05,
+    fireballTTL: 50,
+    fireballSpeed: 0.5
 
 }
 
@@ -56,7 +61,7 @@ document.body.appendChild( renderer.domElement );
 
 //Create Plane
 const planeTextureScaling = 10;
-const planeGeom = new THREE.PlaneGeometry( 50, 50 );
+const planeGeom = new THREE.PlaneGeometry( 50, 50);
 const planeColor = new THREE.TextureLoader().load('../img/floor_color.jpg');
 planeColor.wrapS = THREE.RepeatWrapping;
 planeColor.wrapT = THREE.RepeatWrapping;
@@ -65,12 +70,19 @@ const planeNormal = new THREE.TextureLoader().load('../img/floor_normal.jpg');
 planeNormal.wrapS = THREE.RepeatWrapping;
 planeNormal.wrapT = THREE.RepeatWrapping;
 planeNormal.repeat.set( planeTextureScaling,planeTextureScaling );
+const planeHeight = new THREE.TextureLoader().load('../img/floor_height.png');
+planeHeight.wrapS = THREE.RepeatWrapping;
+planeHeight.wrapT = THREE.RepeatWrapping;
+planeHeight.repeat.set( planeTextureScaling,planeTextureScaling );
 const planeMat = new THREE.MeshStandardMaterial( 
     {color: 0xeeeee4, 
      side: THREE.DoubleSide, 
      map: planeColor,
      normalMap: planeNormal,
-     normalScale:new THREE.Vector2(5,5)} );
+     normalScale: new THREE.Vector2(5,5),
+     //displacementMap: planeHeight,
+     //displacementScale: 0.1
+    });
 const plane = new THREE.Mesh( planeGeom, planeMat );
 plane.receiveShadow = true;
 plane.rotation.x = Math.PI /2.0;
@@ -120,20 +132,21 @@ function dumpObject(obj, lines = [], isLast = true, prefix = '') {
     return lines;
 }
 
-
+var fireBallsArray = [];
 var flame1 = new THREE.Object3D();
 var flame2 = new THREE.Object3D();
 var flame3 = new THREE.Object3D();
 var pg = new THREE.Object3D();
 var playerMesh;
 const gltfLoader = new GLTFLoader();
-const url = '../scene.gltf';
-gltfLoader.load(url, (gltf) => {
+
+//Load main character
+gltfLoader.load('../models/Mage/scene.gltf', (gltf) => {
   var root = gltf.scene;
   playerMesh = root;
   pg.add(playerMesh);
   scene.add(pg);
-  console.log(dumpObject(pg).join('\n'));
+  //console.log(dumpObject(pg).join('\n'));
 
   //Shadow caster
   const geometry = new THREE.SphereGeometry(0.5,32,16);
@@ -155,12 +168,37 @@ gltfLoader.load(url, (gltf) => {
   pg.getObjectByName('GLTF_SceneRootNode').add(flame3);
 
   pg.position.y += 0.1;
-  console.log(pg.getObjectByName('Object_4'));
-  
-  console.log(dumpObject(pg).join('\n'));
-  console.log(pg);
+  //console.log(pg.getObjectByName('Object_4'));
+  //
+  //console.log(dumpObject(pg).join('\n'));
+  //console.log(pg);
   playerMesh.scale.set(0.5,0.5,0.5);
 });
+
+
+//Load skeleton
+gltfLoader.load('../models/Skeleton/scene.gltf', (gltf) => {
+    var root = gltf.scene;
+    root.position.y = 2.0;
+    root.position.z = 5;
+    root.scale.set(1.5,1.5,1.5);
+    scene.add(root);
+    console.log(dumpObject(root).join('\n'));
+  
+    //Shadow caster
+    const geometry = new THREE.SphereGeometry(0.3,32,16);
+    const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+    material.transparent = true;
+    material.opacity = 0.0;
+    const capsule = new THREE.Mesh( geometry, material );
+  
+    capsule.castShadow = true;
+    root.add( capsule );
+    capsule.position.y += 0.6;
+  
+    
+    console.log(dumpObject(pg).join('\n'));
+  });
 
 
 const curve = new THREE.CubicBezierCurve(
@@ -173,7 +211,7 @@ var timetoanimate = 0;
 
 
 function animateCamera(){
-    camera.position.y += 0.015;
+    camera.position.y += 0.02;
     var point = curve.getPointAt(timetoanimate);
     camera.position.x = point.x;
     camera.position.z = point.y;
@@ -190,6 +228,7 @@ function displayMenu(){
 document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     var keyCode = event.which;
+    //console.log(keyCode);
     if (keyCode == 87) {
         PressedKeys.W = true;
     } else if (keyCode == 83) {
@@ -198,8 +237,14 @@ function onDocumentKeyDown(event) {
         PressedKeys.A = true;
     } else if (keyCode == 68) {
         PressedKeys.D = true;
+    }
+      else if (keyCode == 81) {
+        PressedKeys.Q = true;
+    } else if (keyCode == 69) {
+        PressedKeys.E = true;
     } else if (keyCode == 32) {
-        pg.position.set(0, 0, 0);
+        if(!PressedKeys.Space && gameStat==GameStatus.Playng) fire();
+        PressedKeys.Space = true;
     }
 };
 document.addEventListener("keyup", onDocumentKeyUp, false);
@@ -213,10 +258,45 @@ function onDocumentKeyUp(event) {
         PressedKeys.A = false;
     } else if (keyCode == 68) {
         PressedKeys.D = false;
-    } else if (keyCode == 32) {
-        pg.position.set(0, 0, 0);
+    }else if (keyCode == 81) {
+        PressedKeys.Q = false;
+    } else if (keyCode == 69) {
+        PressedKeys.E = false;
+    }  else if (keyCode == 32) {
+        PressedKeys.Space = false;
     }
 };
+
+const fireballGeometry = new THREE.SphereGeometry(0.2,32,16);
+const fireballMaterial = new THREE.MeshStandardMaterial( {color: 0xed8840, emissive: 0xf5c542} );
+
+function fire(){
+    const fireball = new THREE.Mesh( fireballGeometry, fireballMaterial );
+    fireball.position.copy(pg.position);
+    fireball.position.y+=0.5;
+    fireball._direction = new THREE.Vector3(pg.rotation.x,pg.rotation.y,pg.rotation.z);
+    fireball._ttl = GameOptions.fireballTTL;
+    //console.log(fireball);
+    fireBallsArray.push(fireball);
+    scene.add(fireball);
+
+
+}
+
+function moveFireballs(){
+    for(var i=fireBallsArray.length-1;i>=0;i--){
+        fireBallsArray[i].position.z += Math.cos(fireBallsArray[i]._direction.y)*GameOptions.fireballSpeed;
+        fireBallsArray[i].position.x += Math.sin(fireBallsArray[i]._direction.y)*GameOptions.fireballSpeed;
+        if( fireBallsArray[i]._ttl-- < 0 ) 
+        {
+            scene.remove(fireBallsArray[i]);
+            fireBallsArray.splice(i,1);
+            //renderer.renderLists.dispose();
+        }
+        //console.log(fireBallsArray);
+    }
+
+}
 
 function handleControls(){
     if (PressedKeys.W){
@@ -233,6 +313,14 @@ function handleControls(){
     if(PressedKeys.D){
         pg.rotation.y -= GameOptions.cameraSpeedX;
     }
+    if(PressedKeys.E){
+        pg.position.z += Math.sin(pg.rotation.y)*GameOptions.forwardSpeed;
+        pg.position.x -= Math.cos(pg.rotation.y)*GameOptions.forwardSpeed;
+    }
+    if(PressedKeys.Q){
+        pg.position.z -= Math.sin(pg.rotation.y)*GameOptions.forwardSpeed;
+        pg.position.x += Math.cos(pg.rotation.y)*GameOptions.forwardSpeed;
+    }
 
 }
 
@@ -244,12 +332,10 @@ function animateCharacter(time){
     flame2.rotation.y -= 0.03;
     flame3.rotation.y += 0.027;
 
-    if(playerMesh) playerMesh.position.y = 0.15+Math.sin(time*0.001)*charAnimProp.maxFloatingOffset;
-
-
-    
+    if(playerMesh) playerMesh.position.y = 0.15+Math.sin(time*0.001)*charAnimProp.maxFloatingOffset; 
 
 }
+
 
 //render loop
 function animate(time) {
@@ -279,6 +365,7 @@ function animate(time) {
         
     } else if (gameStat == GameStatus.Playng){
             handleControls();
+            moveFireballs();
 
     }
     
