@@ -1,5 +1,7 @@
 import * as THREE from './three.module.js';
 import {GLTFLoader} from './GLTFLoader.js';
+import {Skeleton} from './Skeleton.js'
+import { dumpObject } from './utility.js';
 
 
 const GameStatus = {
@@ -17,14 +19,17 @@ var PressedKeys = {
     W:false,
     Q:false,
     E:false,
-    Space:false
+    Space:false,
+    Down:false,
+    Up:false
 }
 
 var GameOptions = {
     forwardSpeed: 0.1,
     cameraSpeedX: 0.05,
     fireballTTL: 50,
-    fireballSpeed: 0.5
+    fireballSpeed: 0.5,
+    cameraSpeedY : 0.02
 
 }
 
@@ -120,17 +125,7 @@ light3.shadow.camera.near = 0.1;
 light3.shadow.camera.far = 100;
 scene.add(light3);
 
-function dumpObject(obj, lines = [], isLast = true, prefix = '') {
-    const localPrefix = isLast ? '└─' : '├─';
-    lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
-    const newPrefix = prefix + (isLast ? '  ' : '│ ');
-    const lastNdx = obj.children.length - 1;
-    obj.children.forEach((child, ndx) => {
-      const isLast = ndx === lastNdx;
-      dumpObject(child, lines, isLast, newPrefix);
-    });
-    return lines;
-}
+
 
 var fireBallsArray = [];
 var flame1 = new THREE.Object3D();
@@ -177,28 +172,8 @@ gltfLoader.load('../models/Mage/scene.gltf', (gltf) => {
 
 
 //Load skeleton
-gltfLoader.load('../models/Skeleton/scene.gltf', (gltf) => {
-    var root = gltf.scene;
-    root.position.y = 2.0;
-    root.position.z = 5;
-    root.scale.set(1.5,1.5,1.5);
-    scene.add(root);
-    console.log(dumpObject(root).join('\n'));
-  
-    //Shadow caster
-    const geometry = new THREE.SphereGeometry(0.3,32,16);
-    const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-    material.transparent = true;
-    material.opacity = 0.0;
-    const capsule = new THREE.Mesh( geometry, material );
-  
-    capsule.castShadow = true;
-    root.add( capsule );
-    capsule.position.y += 0.6;
-  
-    
-    console.log(dumpObject(pg).join('\n'));
-  });
+//while(!Skeleton.loaded) {console.log(Skeleton.loaded);}
+
 
 
 const curve = new THREE.CubicBezierCurve(
@@ -245,6 +220,10 @@ function onDocumentKeyDown(event) {
     } else if (keyCode == 32) {
         if(!PressedKeys.Space && gameStat==GameStatus.Playng) fire();
         PressedKeys.Space = true;
+    } else if (keyCode == 38) {
+        PressedKeys.Up = true;
+    } else if (keyCode == 40){
+        PressedKeys.Down = true;
     }
 };
 document.addEventListener("keyup", onDocumentKeyUp, false);
@@ -264,6 +243,10 @@ function onDocumentKeyUp(event) {
         PressedKeys.E = false;
     }  else if (keyCode == 32) {
         PressedKeys.Space = false;
+    }else if (keyCode == 38) {
+        PressedKeys.Up = false;
+    } else if (keyCode == 40){
+        PressedKeys.Down = false;
     }
 };
 
@@ -281,6 +264,11 @@ function fire(){
     scene.add(fireball);
 
 
+}
+
+function checkCollision(){
+
+    
 }
 
 function moveFireballs(){
@@ -321,6 +309,15 @@ function handleControls(){
         pg.position.z -= Math.sin(pg.rotation.y)*GameOptions.forwardSpeed;
         pg.position.x += Math.cos(pg.rotation.y)*GameOptions.forwardSpeed;
     }
+    if(PressedKeys.Up){
+        camera.position.y += GameOptions.cameraSpeedY;
+        
+        camera.lookAt(pg.position.x,pg.position.y,pg.position.z);
+    }
+    if(PressedKeys.Down){
+        camera.position.y -= GameOptions.cameraSpeedY;
+        camera.lookAt(pg.position.x,pg.position.y,pg.position.z);
+    }
 
 }
 
@@ -360,12 +357,14 @@ function animate(time) {
             camera.position.z = -5;
             camera.lookAt(0,0.7,0);
             pg.add(camera);
-
+            console.log(new Skeleton(scene,0,5));
+            
         }
         
     } else if (gameStat == GameStatus.Playng){
             handleControls();
             moveFireballs();
+            
 
     }
     
