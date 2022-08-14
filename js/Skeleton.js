@@ -45,15 +45,13 @@ class Skeleton{
         console.log("New skeleton created");
         console.log(dumpObject(this.mesh).join('\n'));
 
-        const geometry2 = new THREE.SphereGeometry(0.5,32,16);
-        const material2 = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-        //material.transparent = true;
-        //material.opacity = 0.0;
-        const capsule2 = new THREE.Mesh( geometry2, material2 );
-        capsule2.position.y = -1.0;
-        this.hitSize = 0.5;
-        this.mesh.add(capsule2);
+        this.hitSize = 0.3;
+        this.health = 1.0;
     }
+
+    
+
+
 }
 
 export {Skeleton} 

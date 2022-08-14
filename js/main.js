@@ -1,9 +1,11 @@
 import * as THREE from './three.module.js';
 import {GLTFLoader} from './GLTFLoader.js';
 import {Skeleton} from './Skeleton.js'
+import { Fireball } from './Fireball.js';
+import { GameOptions } from './GameOptions.js';
 import { dumpObject } from './utility.js';
 
-
+//GameStatus enumerator
 const GameStatus = {
     Menu:1,
     Playng:2,
@@ -11,7 +13,9 @@ const GameStatus = {
     Starting:4,
     Debug:5
 }
+var gameStat = GameStatus.Menu;
 
+//PressedKeys dict to handle input
 var PressedKeys = {
     A:false,
     S:false,
@@ -24,18 +28,7 @@ var PressedKeys = {
     Up:false
 }
 
-var GameOptions = {
-    forwardSpeed: 0.1,
-    cameraSpeedX: 0.05,
-    fireballTTL: 50,
-    fireballSpeed: 0.5,
-    cameraSpeedY : 0.02
-
-}
-
-var gameStat = GameStatus.Menu;
-
-
+//Menu Setup
 document.getElementById("startGame").addEventListener("click", function(){
     gameStat = GameStatus.Starting;
     document.getElementById("Menu").style.display = 'none';
@@ -45,6 +38,8 @@ document.getElementById("startGame").addEventListener("click", function(){
 //Scene Setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+camera.position.z = 2;
+camera.position.y = 0.5;
 scene.background = new THREE.Color(0.53,0.81,0.92);
 
 const renderer = new THREE.WebGLRenderer();
@@ -52,17 +47,6 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild( renderer.domElement );
-
-
-//Create Cube
-//const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-//const material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
-//const cube = new THREE.Mesh( geometry, material );
-//cube.position.y = 1;
-//cube.castShadow = true;
-//
-//scene.add( cube );
-
 
 //Create Plane
 const planeTextureScaling = 10;
@@ -94,8 +78,6 @@ plane.rotation.x = Math.PI /2.0;
 scene.add( plane );
 
 
-camera.position.z = 2;
-camera.position.y = 0.5;
 
 
 //Light 1
@@ -111,7 +93,7 @@ const light2 = new THREE.DirectionalLight(color, 0.3);
 light2.position.set(-1, 2, -4);
 scene.add(light2);
 
-//Light 3
+//Light 3 (Shadow)
 const light3 = new THREE.DirectionalLight(color, 0.8);
 light3.position.set(0, 10, 0);
 light3.castShadow=true;
@@ -126,12 +108,13 @@ light3.shadow.camera.far = 100;
 scene.add(light3);
 
 
-
+//Global Objects
 var fireBallsArray = [];
+var enemyArray = [];
 var flame1 = new THREE.Object3D();
 var flame2 = new THREE.Object3D();
 var flame3 = new THREE.Object3D();
-var pg = new THREE.Object3D();
+var pg = new THREE.Object3D(); 
 var playerMesh;
 const gltfLoader = new GLTFLoader();
 
@@ -169,11 +152,6 @@ gltfLoader.load('../models/Mage/scene.gltf', (gltf) => {
   //console.log(pg);
   playerMesh.scale.set(0.5,0.5,0.5);
 });
-
-
-//Load skeleton
-//while(!Skeleton.loaded) {console.log(Skeleton.loaded);}
-
 
 
 const curve = new THREE.CubicBezierCurve(
@@ -250,38 +228,49 @@ function onDocumentKeyUp(event) {
     }
 };
 
-const fireballGeometry = new THREE.SphereGeometry(0.2,32,16);
-const fireballMaterial = new THREE.MeshStandardMaterial( {color: 0xed8840, emissive: 0xf5c542} );
-
 function fire(){
-    const fireball = new THREE.Mesh( fireballGeometry, fireballMaterial );
-    fireball.position.copy(pg.position);
-    fireball.position.y+=0.5;
-    fireball._direction = new THREE.Vector3(pg.rotation.x,pg.rotation.y,pg.rotation.z);
-    fireball._ttl = GameOptions.fireballTTL;
-    //console.log(fireball);
+    var fireball = new Fireball(scene,pg.position,pg.rotation);
     fireBallsArray.push(fireball);
-    scene.add(fireball);
-
-
 }
 
-function checkCollision(){
+function checkFireballEnemyCollision(){
+    for(var i=enemyArray.length-1;i>=0;i--){
+        //console.log(enemyArray);
+        for(var j=fireBallsArray.length-1;j>=0;j--){
+            var enemy=enemyArray[i];
+            var fireball=fireBallsArray[j];
+            var enemyPos=new THREE.Vector2(enemy.mesh.position.x,enemy.mesh.position.z);
+            var fireballPos=new THREE.Vector2(fireball.mesh.position.x,fireball.mesh.position.z);
+            if(enemyPos.distanceTo(fireballPos)<= fireball.hitSize+enemy.hitSize){
+                console.log("Collision detected");
+                //Destroy fireball
+                scene.remove(fireball.mesh);
+                fireBallsArray.splice(j,1);
 
-    
+                //Damage enemy
+                enemy.health -= fireball.damage;
+                if(enemy.health<=0){
+                    //Destroy enemy
+                    scene.remove(enemy.mesh);
+                    enemyArray.splice(i,1);
+                }
+            }
+
+        }
+    }
+
 }
 
 function moveFireballs(){
     for(var i=fireBallsArray.length-1;i>=0;i--){
-        fireBallsArray[i].position.z += Math.cos(fireBallsArray[i]._direction.y)*GameOptions.fireballSpeed;
-        fireBallsArray[i].position.x += Math.sin(fireBallsArray[i]._direction.y)*GameOptions.fireballSpeed;
-        if( fireBallsArray[i]._ttl-- < 0 ) 
+        fireBallsArray[i].mesh.position.z += Math.cos(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed;
+        fireBallsArray[i].mesh.position.x += Math.sin(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed;
+        if( fireBallsArray[i].ttl-- < 0 ) 
         {
-            scene.remove(fireBallsArray[i]);
+            scene.remove(fireBallsArray[i].mesh);
             fireBallsArray.splice(i,1);
             //renderer.renderLists.dispose();
         }
-        //console.log(fireBallsArray);
     }
 
 }
@@ -336,6 +325,7 @@ function animateCharacter(time){
 
 //render loop
 function animate(time) {
+
 	requestAnimationFrame( animate );
     animateCharacter(time);
 
@@ -347,6 +337,7 @@ function animate(time) {
     } else if(gameStat == GameStatus.Menu){
        displayMenu();
        camera.lookAt(0,0.7,0);
+
     } else if (gameStat == GameStatus.Starting){
         if(timetoanimate<=1){
             animateCamera();
@@ -357,15 +348,15 @@ function animate(time) {
             camera.position.z = -5;
             camera.lookAt(0,0.7,0);
             pg.add(camera);
-            console.log(new Skeleton(scene,0,5));
-            
+            var enemy = new Skeleton(scene,0,5);     
+            enemyArray.push(enemy);      
         }
         
     } else if (gameStat == GameStatus.Playng){
             handleControls();
             moveFireballs();
+            checkFireballEnemyCollision();
             
-
     }
     
 	renderer.render( scene, camera );
