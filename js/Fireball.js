@@ -15,6 +15,7 @@ class Fireball{
         this.direction = new THREE.Vector3(dir.x, dir.y, dir.z);
         this.ttl = GameOptions.fireballTTL;
         this.hitSize = 0.2;
+        //this.mesh.scale.set(5.0,5.0,5.0);
         this.damage= 0.5;
         scene.add(this.mesh);
     }

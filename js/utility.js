@@ -10,4 +10,10 @@ function dumpObject(obj, lines = [], isLast = true, prefix = '') {
     return lines;
 }
 
-export {dumpObject};
+function resetObject(ob){
+  ob.position.x=0;
+  ob.position.y=0;
+  ob.position.z=0;
+  ob.scale.set(1,1,1);
+}
+export {dumpObject,resetObject};

@@ -13,8 +13,14 @@ class Skeleton{
             Skeleton.root = new THREE.Object3D;
             gltf.scene.scale.set(1.5,1.5,1.5);
             Skeleton.root.add(gltf.scene)
-            
 
+            var rightFemor = Skeleton.root.getObjectByName('femur_derecha');
+            var rightTibia = Skeleton.root.getObjectByName('espinilla_derecha');
+            var rightTalon = Skeleton.root.getObjectByName('talon_derecha');
+            var rightDedos = Skeleton.root.getObjectByName('dedos_pie_derecha');
+            rightFemor.attach(rightTibia);
+            rightTibia.attach(rightTalon);
+            rightTalon.attach(rightDedos);
             //scene.add(root);
             //console.log(dumpObject(Skeleton.root).join('\n'));
         
@@ -41,12 +47,24 @@ class Skeleton{
         this.mesh.position.y = 2.0;
         this.mesh.position.z = z;
         this.mesh.position.x = x;
+        this.rightFemor = this.mesh.getObjectByName('femur_derecha');
+        this.leftFemor = this.mesh.getObjectByName('femur_izquierdo');
+        console.log(this.rightFemor);
+        console.log(this.leftFemor);
+        this.timeOffset = 0;
         scene.add(this.mesh);
         console.log("New skeleton created");
         console.log(dumpObject(this.mesh).join('\n'));
 
         this.hitSize = 0.3;
         this.health = 1.0;
+    }
+
+    moveAnimation(time){
+        this.rightFemor.rotation.x = -2+ Math.sin(time*0.005)*0.8;
+        this.leftFemor.rotation.x = -2+-Math.sin(time*0.005)*0.8;
+        //console.log(this.rightFemor.rotation.z);
+        //console.log(this.leftFemor);
     }
 
     
