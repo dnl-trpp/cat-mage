@@ -1,9 +1,11 @@
 import * as THREE from './three.module.js';
 import {GLTFLoader} from './GLTFLoader.js';
+import {Wizard} from './Wizard.js'
 import {Skeleton} from './Skeleton.js'
 import { Fireball } from './Fireball.js';
 import { GameOptions } from './GameOptions.js';
 import { dumpObject, resetObject } from './utility.js';
+import { TWEEN } from './tween.module.min.js';
 
 //GameStatus enumerator
 const GameStatus = {
@@ -385,6 +387,15 @@ function moveSkeleton(time,deltaTime){
     for(var i=enemyArray.length-1;i>=0;i--){
         var enemy=enemyArray[i];
         
+        if(enemy.isDying){
+            enemy.dieAnimation(time);
+            if(enemy.isDead) {
+                scene.remove(enemy.mesh);
+                enemyArray.splice(i,1);
+            }
+            continue;
+        }
+
         //Collision with other Skeleton
         for(var j=enemyArray.length-1;j>=0;j--){
             if(j==i) break;
@@ -403,11 +414,25 @@ function moveSkeleton(time,deltaTime){
         var dir= new THREE.Vector2(pg.position.x-enemy.mesh.position.x,pg.position.z-enemy.mesh.position.z);
         //If Close to Player
         if(dir.length()<=1) {
+            if(!enemy.isAttacking){
+                enemy.resetRotations();
+                enemy.isAttacking = true;
+            }
+            else{
+                enemy.attackAnimation(time);
+            }
+            dir.normalize();
+            enemy.mesh.rotation.y=Math.atan2(-dir.x,-dir.y);
             continue;
         }
-        dir.normalize();
+        if(enemy.isAttacking){
+            enemy.resetRotations();
+            enemy.isAttacking = false;
+        }
         enemy.moveAnimation(time);
-            enemy.mesh.rotation.y=Math.atan2(-dir.x,-dir.y);
+
+        dir.normalize();
+        enemy.mesh.rotation.y=Math.atan2(-dir.x,-dir.y);
         enemy.mesh.position.x += dir.x * GameOptions.skeletonSpeed * deltaTime;
         enemy.mesh.position.z += dir.y * GameOptions.skeletonSpeed * deltaTime;
 
@@ -438,8 +463,9 @@ function checkFireballEnemyCollision(){
                 enemy.health -= fireball.damage;
                 if(enemy.health<=0){
                     //Destroy enemy
-                    scene.remove(enemy.mesh);
-                    enemyArray.splice(i,1);
+                    //scene.remove(enemy.mesh);
+                    enemy.isDying=true;
+                    //enemyArray.splice(i,1);
                 }
             }
 
@@ -525,6 +551,7 @@ function spawnWave(wave){
         //Spawn skeleton in random position
         enemyArray.push(new Skeleton(scene,Math.floor(Math.random()*30-15),Math.floor(Math.random() * 30-15)));
     }
+    new Wizard(scene,0,0);
 }
 
 const raycaster = new THREE.Raycaster();
