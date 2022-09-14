@@ -3,6 +3,7 @@ import {GLTFLoader} from './GLTFLoader.js';
 import {Wizard} from './Wizard.js'
 import {Skeleton} from './Skeleton.js'
 import { Fireball } from './Fireball.js';
+import { WizardBall } from './WizardBall.js';
 import { GameOptions } from './GameOptions.js';
 import { dumpObject, resetObject } from './utility.js';
 import { TWEEN } from './tween.module.min.js';
@@ -115,6 +116,8 @@ scene.add(light3);
 //Global Objects
 var fireBallsArray = [];
 var enemyArray = [];
+var wizardArray = [];
+var wizardBallsArray = [];
 var flame1 = new THREE.Object3D();
 var flame2 = new THREE.Object3D();
 var flame3 = new THREE.Object3D();
@@ -383,6 +386,18 @@ function fire(){
     fireBallsArray.push(fireball);
 }
 
+function moveWizard(time){
+    for(var i=wizardArray.length-1;i>=0;i--){
+        var enemy=wizardArray[i];
+        var dir= new THREE.Vector2(pg.position.x-enemy.mesh.position.x,pg.position.z-enemy.mesh.position.z);
+        dir.normalize();
+        enemy.mesh.rotation.y=Math.atan2(dir.x,dir.y);
+        //enemy.mesh.position.x += dir.x * GameOptions.skeletonSpeed * deltaTime;
+        //enemy.mesh.position.z += dir.y * GameOptions.skeletonSpeed * deltaTime;
+    }
+    
+}
+
 function moveSkeleton(time,deltaTime){
     for(var i=enemyArray.length-1;i>=0;i--){
         var enemy=enemyArray[i];
@@ -472,14 +487,58 @@ function checkFireballEnemyCollision(){
         }
     }
 
+    for(var i=wizardArray.length-1;i>=0;i--){
+        //console.log(wizardArray);
+        for(var j=fireBallsArray.length-1;j>=0;j--){
+            var wizard=wizardArray[i];
+            var fireball=fireBallsArray[j];
+            if (!wizard || !fireball) break;
+            var wizardPos=new THREE.Vector2(wizard.mesh.position.x,wizard.mesh.position.z);
+            var fireballPos=new THREE.Vector2(fireball.mesh.position.x,fireball.mesh.position.z);
+            if(wizardPos.distanceTo(fireballPos)<= fireball.hitSize+wizard.hitSize){
+                console.log("Collision detected");
+                //Destroy fireball
+                scene.remove(fireball.mesh);
+                fireBallsArray.splice(j,1);
+
+                //Damage wizard
+                wizard.health -= fireball.damage;
+                if(wizard.health<=0){
+                    //Destroy wizard
+                    wizard.stopAttackAnimation();
+                    scene.remove(wizard.mesh);
+                    wizardArray.splice(i,1);
+                }
+            }
+
+        }
+    }
+
 }
 
 
-function moveFireballs(){
+function moveWizardBalls(deltaTime){
+    for(var i=wizardBallsArray.length-1;i>=0;i--){
+
+        wizardBallsArray[i].mesh.position.z -= wizardBallsArray[i].direction.y*GameOptions.wizardballSpeed*deltaTime;
+        wizardBallsArray[i].mesh.position.x -= wizardBallsArray[i].direction.x*GameOptions.wizardballSpeed*deltaTime;
+        wizardBallsArray[i].ttl-= deltaTime;
+        if( wizardBallsArray[i].ttl < 0 ) 
+        {
+            scene.remove(wizardBallsArray[i].mesh);
+            wizardBallsArray.splice(i,1);
+            //renderer.renderLists.dispose();
+        }
+    }
+}
+
+
+function moveFireballs(deltaTime){
     for(var i=fireBallsArray.length-1;i>=0;i--){
-        fireBallsArray[i].mesh.position.z += Math.cos(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed;
-        fireBallsArray[i].mesh.position.x += Math.sin(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed;
-        if( fireBallsArray[i].ttl-- < 0 ) 
+        fireBallsArray[i].mesh.position.z += Math.cos(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed*deltaTime;
+        fireBallsArray[i].mesh.position.x += Math.sin(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed*deltaTime;
+        fireBallsArray[i].ttl-= deltaTime;
+        if( fireBallsArray[i].ttl < 0 ) 
         {
             scene.remove(fireBallsArray[i].mesh);
             fireBallsArray.splice(i,1);
@@ -544,14 +603,30 @@ function animateCharacter(time){
 
 var wave=0;
 
+function wizardFire(staff){
+    var worldPos= new THREE.Vector3;
+    staff.getWorldPosition(worldPos);
+    var dir= new THREE.Vector3(worldPos.x-pg.position.x,worldPos.z-pg.position.z);
+    dir.normalize();
+    var wizardBall = new WizardBall(scene, worldPos, dir);
+    wizardBallsArray.push(wizardBall);
+    //console.log("FIRE");
+}
 function spawnWave(wave){
     var numSkeleton = GameOptions.waves[wave][0]; 
-    var numMages = GameOptions.waves[wave][1]; 
+    var numWizards = GameOptions.waves[wave][1]; 
     for(var i=0;i<numSkeleton;i++){
         //Spawn skeleton in random position
+        console.log("spawn skel");
         enemyArray.push(new Skeleton(scene,Math.floor(Math.random()*30-15),Math.floor(Math.random() * 30-15)));
     }
-    new Wizard(scene,0,0);
+    for(var i=0;i<numWizards;i++){
+        //Spawn skeleton in random position
+        console.log("spawn wiza");
+        var wizard=new Wizard(scene,Math.floor(Math.random()*30-15),Math.floor(Math.random()*20-5),wizardFire);
+        wizard.startAttackAnimation(Math.random()*2000);
+        wizardArray.push( wizard);
+    }
 }
 
 const raycaster = new THREE.Raycaster();
@@ -591,8 +666,10 @@ function animate(time) {
         
     } else if (gameStat == GameStatus.Playng){
             handleControls(deltaTime);
-            moveFireballs();
+            moveFireballs(deltaTime);
             moveSkeleton(time,deltaTime);
+            moveWizard(time);
+            moveWizardBalls(deltaTime);
             checkFireballEnemyCollision();
 
             raycaster.setFromCamera( new THREE.Vector2(0,0), camera );
@@ -615,12 +692,14 @@ function animate(time) {
 
 
 
-            if(enemyArray.length==0){
+            if(enemyArray.length==0 && wizardArray.length==0){
                 gameStat = GameStatus.Win;
             }
             
     } else if (gameStat == GameStatus.Win){
         if(wave < GameOptions.waves.length) {
+            //Cleaning up
+            TWEEN.removeAll();
             console.log("Wave won!");
             console.log("Wave "+wave);
             spawnWave(wave);
@@ -631,6 +710,7 @@ function animate(time) {
         }
     }
     prevTime = time;
+    TWEEN.update(time);
 	renderer.render( scene, camera );
 }
 
