@@ -56,6 +56,8 @@ class Wizard{
         this.mesh.position.x = x;
         this.hitSize = 0.6;
         this.health = 1.0;
+        this.isDying = false;
+        this.isDead = false;
 
         this.body = this.mesh.getObjectByName('Cone005');
         this.head = this.mesh.getObjectByName('Sphere001');
@@ -163,6 +165,13 @@ class Wizard{
         this.floatingTween.chain().stop();
         this.attackRightHandKF1.chain().stop();
 
+    }
+
+    dieAnimation(time){
+        this.mesh.scale.set(this.mesh.scale.x-0.02,this.mesh.scale.y-0.02,this.mesh.scale.y-0.02);
+        this.mesh.rotation.x = Math.sin(time*0.02)*0.1;
+        this.mesh.position.y -= 0.01;
+        if(this.mesh.scale.x<= 0) this.isDead=true;
     }
 
 }

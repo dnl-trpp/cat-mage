@@ -16,7 +16,7 @@ class WizardBall{
         this.ttl = GameOptions.wizardballTTL;
         this.hitSize = 0.2;
         //this.mesh.scale.set(5.0,5.0,5.0);
-        this.damage= 0.5;
+        this.damage= 1;
         scene.add(this.mesh);
     }
 

@@ -15,7 +15,8 @@ const GameStatus = {
     Paused:3,
     Starting:4,
     Debug:5,
-    Win:6
+    Win:6,
+    Lost:7
 }
 var gameStat = GameStatus.Menu;
 
@@ -52,6 +53,16 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild( renderer.domElement );
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+}
 
 //Create Plane
 const planeTextureScaling = 10;
@@ -122,8 +133,15 @@ var flame1 = new THREE.Object3D();
 var flame2 = new THREE.Object3D();
 var flame3 = new THREE.Object3D();
 var pg = new THREE.Object3D(); 
+//Special proprieties
+pg.health = GameOptions.playerHealth;
+pg.hitSize = 0.3;
+pg.lastHitTime = -2001.0;
+
 pg.add(camera);
 var playerMesh;
+var playerMaterial;
+var invulnerabilityTween;
 const gltfLoader = new GLTFLoader();
 
 //Load main character
@@ -133,7 +151,12 @@ gltfLoader.load('../models/Mage/scene.gltf', (gltf) => {
   pg.add(playerMesh);
   scene.add(pg);
   //console.log(dumpObject(pg).join('\n'));
-
+  playerMaterial = pg.getObjectByName("Object_13").material;
+  invulnerabilityTween = new TWEEN.Tween(playerMaterial)
+  .to({opacity:0},200)
+  .easing(TWEEN.Easing.Linear.None)
+  .yoyo(true)
+  .repeat(Infinity);
   //Shadow caster
   const geometry = new THREE.SphereGeometry(0.5,32,16);
   const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
@@ -389,6 +412,14 @@ function fire(){
 function moveWizard(time){
     for(var i=wizardArray.length-1;i>=0;i--){
         var enemy=wizardArray[i];
+
+        if(enemy.isDying){
+            enemy.dieAnimation(time);
+            if(enemy.isDead){
+                scene.remove(enemy.mesh);
+                wizardArray.splice(i,1);
+            }
+        }
         var dir= new THREE.Vector2(pg.position.x-enemy.mesh.position.x,pg.position.z-enemy.mesh.position.z);
         dir.normalize();
         enemy.mesh.rotation.y=Math.atan2(dir.x,dir.y);
@@ -438,6 +469,26 @@ function moveSkeleton(time,deltaTime){
             }
             dir.normalize();
             enemy.mesh.rotation.y=Math.atan2(-dir.x,-dir.y);
+
+            //Handle invincibility frames
+            if(time-pg.lastHitTime< GameOptions.invulnerability) continue;
+            pg.lastHitTime = time;
+            playerMaterial.transparent = true;
+            invulnerabilityTween = new TWEEN.Tween(playerMaterial)
+                .to({opacity:0},200)
+                .easing(TWEEN.Easing.Linear.None)
+                .yoyo(true)
+                .repeat(Infinity);
+            invulnerabilityTween.start();
+            //Damage pg
+            pg.health -= enemy.damage;
+            console.log("Hit: "+pg.health);
+            if(pg.health<=0){
+                //Destroy pg
+                pg.isDying = true;
+                gameStat=GameStatus.Lost;
+                scene.attach(camera);
+            }
             continue;
         }
         if(enemy.isAttacking){
@@ -458,6 +509,43 @@ function moveSkeleton(time,deltaTime){
 
 }
 
+
+function checkWizardballPlayerCollision(time){
+        for(var j=wizardBallsArray.length-1;j>=0;j--){
+            var wizardball=wizardBallsArray[j];
+            if (!wizardball) break;
+            var pgPos=new THREE.Vector2(pg.position.x,pg.position.z);
+            var wizardballPos=new THREE.Vector2(wizardball.mesh.position.x,wizardball.mesh.position.z);
+            if(pgPos.distanceTo(wizardballPos)<= wizardball.hitSize+pg.hitSize){
+                console.log("Collision detected");
+                //Destroy wizardball
+                scene.remove(wizardball.mesh);
+                wizardBallsArray.splice(j,1);
+
+                //Handle invincibility frames
+                if(time-pg.lastHitTime< GameOptions.invulnerability) continue;
+                pg.lastHitTime = time;
+                playerMaterial.transparent = true;
+                invulnerabilityTween = new TWEEN.Tween(playerMaterial)
+                    .to({opacity:0},200)
+                    .easing(TWEEN.Easing.Linear.None)
+                    .yoyo(true)
+                    .repeat(Infinity);
+                invulnerabilityTween.start();
+
+                //Damage pg
+                pg.health -= wizardball.damage;
+                console.log("Hit: "+pg.health);
+                if(pg.health<=0){
+                    //Destroy pg
+                    pg.isDying = true;
+                    gameStat=GameStatus.Lost;
+                    scene.attach(camera);
+                }
+            }
+
+        }
+}
 
 function checkFireballEnemyCollision(){
     for(var i=enemyArray.length-1;i>=0;i--){
@@ -506,8 +594,9 @@ function checkFireballEnemyCollision(){
                 if(wizard.health<=0){
                     //Destroy wizard
                     wizard.stopAttackAnimation();
-                    scene.remove(wizard.mesh);
-                    wizardArray.splice(i,1);
+                    wizard.isDying=true;
+                    //scene.remove(wizard.mesh);
+                    //wizardArray.splice(i,1);
                 }
             }
 
@@ -592,12 +681,36 @@ function handleControls(deltaTime){
 var charAnimProp={
     maxFloatingOffset:0.1
 }
-function animateCharacter(time){
-    flame1.rotation.y += 0.025;
-    flame2.rotation.y -= 0.03;
-    flame3.rotation.y += 0.027;
+
+
+function animateCharacter(time,deltaTime){
+    //console.log(flame1.rotation.y);
+    if(deltaTime){
+        flame1.rotation.y += 0.025*deltaTime/10;
+        //console.log(flame1.rotation.y);
+        flame2.rotation.y -= 0.03*deltaTime/10;
+        flame3.rotation.y += 0.027*deltaTime/10;
+    //console.log(flame1.rotation.y);
+    }
 
     if(playerMesh) playerMesh.position.y = 0.15+Math.sin(time*0.001)*charAnimProp.maxFloatingOffset; 
+
+        //console.log("pl");
+        //console.log(dumpObject(playerMesh).join('\n'));
+    if(playerMaterial){
+        if(time-pg.lastHitTime>= GameOptions.invulnerability){
+            playerMaterial.opacity= 1.0;
+           playerMaterial.transparent = false;
+           invulnerabilityTween.stop();
+        }
+    }
+
+    if(pg.isDying){
+        pg.scale.set(pg.scale.x-0.02,pg.scale.y-0.02,pg.scale.y-0.02);
+        pg.rotation.x = Math.sin(time*0.02)*0.1;
+        pg.position.y -= 0.01;
+        if(pg.scale.x<= 0) scene.remove(pg);
+    }
 
 }
 
@@ -631,12 +744,12 @@ function spawnWave(wave){
 
 const raycaster = new THREE.Raycaster();
 var prevTime=0;
+var deltaTime=0;
 //render loop
 function animate(time) {
-    
-    var deltaTime = time-prevTime;
+    deltaTime = time-prevTime;
 	requestAnimationFrame( animate );
-    animateCharacter(time);
+    animateCharacter(time,deltaTime);
 
     if(gameStat==GameStatus.Debug){
         camera.position.y = 10;
@@ -671,6 +784,7 @@ function animate(time) {
             moveWizard(time);
             moveWizardBalls(deltaTime);
             checkFireballEnemyCollision();
+            checkWizardballPlayerCollision(time);
 
             raycaster.setFromCamera( new THREE.Vector2(0,0), camera );
             const intersects = raycaster.intersectObjects( walls);
@@ -706,8 +820,11 @@ function animate(time) {
             wave++;
             gameStat= GameStatus.Playng;
         }else{
-            console.log("Game Over!");
+            console.log("Game Won!");
         }
+    } else if (gameStat == GameStatus.Lost){
+        console.log("Game Over!")
+
     }
     prevTime = time;
     TWEEN.update(time);

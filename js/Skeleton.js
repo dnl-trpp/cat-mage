@@ -104,6 +104,7 @@ class Skeleton{
         this.isAttacking = false;
         this.isDying = false;
         this.isDead = false;
+        this.damage = 1;
     }
 
     moveAnimation(timef){
