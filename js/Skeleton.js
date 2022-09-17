@@ -8,7 +8,7 @@ class Skeleton{
         Skeleton.loaded= false;
         const gltfLoader = new GLTFLoader();
         //Load skeleton
-        gltfLoader.load('../models/Skeleton/scene.gltf', (gltf) => {
+        gltfLoader.load('./models/Skeleton/scene.gltf', (gltf) => {
         
             Skeleton.root = new THREE.Object3D;
             gltf.scene.scale.set(1.5,1.5,1.5);

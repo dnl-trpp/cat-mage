@@ -67,15 +67,15 @@ function onWindowResize(){
 //Create Plane
 const planeTextureScaling = 10;
 const planeGeom = new THREE.PlaneGeometry( 50, 50);
-const planeColor = new THREE.TextureLoader().load('../img/floor_color.jpg');
+const planeColor = new THREE.TextureLoader().load('./img/floor_color.jpg');
 planeColor.wrapS = THREE.RepeatWrapping;
 planeColor.wrapT = THREE.RepeatWrapping;
 planeColor.repeat.set( planeTextureScaling,planeTextureScaling );
-const planeNormal = new THREE.TextureLoader().load('../img/floor_normal.jpg');
+const planeNormal = new THREE.TextureLoader().load('./img/floor_normal.jpg');
 planeNormal.wrapS = THREE.RepeatWrapping;
 planeNormal.wrapT = THREE.RepeatWrapping;
 planeNormal.repeat.set( planeTextureScaling,planeTextureScaling );
-const planeHeight = new THREE.TextureLoader().load('../img/floor_height.png');
+const planeHeight = new THREE.TextureLoader().load('./img/floor_height.png');
 planeHeight.wrapS = THREE.RepeatWrapping;
 planeHeight.wrapT = THREE.RepeatWrapping;
 planeHeight.repeat.set( planeTextureScaling,planeTextureScaling );
@@ -145,7 +145,7 @@ var invulnerabilityTween;
 const gltfLoader = new GLTFLoader();
 
 //Load main character
-gltfLoader.load('../models/Mage/scene.gltf', (gltf) => {
+gltfLoader.load('./models/Mage/scene.gltf', (gltf) => {
   var root = gltf.scene;
   playerMesh = root;
   pg.add(playerMesh);
@@ -189,7 +189,7 @@ var walls = [];
 var wallMaterial1;
 var wallMaterial2;
 //Load Props
-gltfLoader.load('../models/Props/scene.gltf', (gltf) => {
+gltfLoader.load('./models/Props/scene.gltf', (gltf) => {
     var root = gltf.scene;
     console.log(dumpObject(root).join('\n'));
 

@@ -8,7 +8,7 @@ class Wizard{
     static{
         const gltfLoader = new GLTFLoader();
         //Load Wizard
-        gltfLoader.load('../models/Wizard/scene.gltf', (gltf) => {
+        gltfLoader.load('./models/Wizard/scene.gltf', (gltf) => {
         
             Wizard.root = new THREE.Object3D;
             gltf.scene.scale.set(0.025,0.025,0.025);
