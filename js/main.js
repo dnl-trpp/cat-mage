@@ -882,6 +882,13 @@ function animate(time) {
             gameStat = GameStatus.ChoosingUpgrade;
         }else{
             console.log("Game Won!");
+            overlayDiv.style.display = 'block';
+            gameWonDiv.style.display = 'block';
+            tryagainBtn.style.display = 'block';
+            smallWonDiv.style.display = 'block';
+            tryagainBtn.setAttribute('data-front', 'Play again');
+            smallWonDiv.textContent = 'You beat the dungeon!'
+            gameWonDiv.textContent = 'Congratulations!'
         }
     } else if (gameStat == GameStatus.Lost){
         console.log("Game Over!")
