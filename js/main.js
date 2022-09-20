@@ -16,7 +16,8 @@ const GameStatus = {
     Starting:4,
     Debug:5,
     Win:6,
-    Lost:7
+    Lost:7,
+    ChoosingUpgrade:8
 }
 var gameStat = GameStatus.Menu;
 
@@ -33,6 +34,55 @@ var PressedKeys = {
     Up:false
 }
 
+//Upgrade Menu
+var gameWonDiv = document.getElementById("GameWonDiv");
+var smallWonDiv = document.getElementById("SmallWonDiv");
+var overlayDiv = document.getElementById("overlay");
+var tryagainBtn = document.getElementById("TryAgain");
+tryagainBtn.addEventListener("click",function(){
+    location.reload();
+
+});
+tryagainBtn.style.display = 'none';
+gameWonDiv.style.display = 'none';
+smallWonDiv.style.display = 'none';
+overlayDiv.style.display = 'none';
+var leftUpgrade =  document.getElementById("leftPowerup");
+leftUpgrade.style.display = 'none';
+var middleUpgrade =  document.getElementById("middlePowerup");
+middleUpgrade.style.display = 'none';
+var rightUpgrade =  document.getElementById("rightPowerup");
+rightUpgrade.style.display = 'none';
+leftUpgrade.addEventListener("click",function(){
+    GameOptions.playerHealth++;
+    cleanupWave();
+});
+
+middleUpgrade.addEventListener("click",function(){
+    GameOptions.fireballDamage += 0.5;
+    GameOptions.fireballHitSize += 0.1;
+    Fireball.fireballGeometry = new THREE.SphereGeometry(GameOptions.fireballHitSize,32,16);
+    cleanupWave();
+});
+
+rightUpgrade.addEventListener("click",function(){
+    GameOptions.fireballTTL += 100;
+    GameOptions.fireballSpeed += 0.01;
+    cleanupWave();
+});
+
+function cleanupWave(){
+    leftUpgrade.style.display = 'none';
+    middleUpgrade.style.display = 'none';
+    rightUpgrade.style.display = 'none';
+    gameWonDiv.style.display = 'none';
+    smallWonDiv.style.display = 'none';
+    overlayDiv.style.display = 'none';
+    spawnWave(wave);
+    wave++;
+    gameStat= GameStatus.Playng;
+
+}
 //Menu Setup
 document.getElementById("startGame").addEventListener("click", function(){
     gameStat = GameStatus.Starting;
@@ -726,6 +776,9 @@ function wizardFire(staff){
     //console.log("FIRE");
 }
 function spawnWave(wave){
+
+    pg.health = GameOptions.playerHealth;
+
     var numSkeleton = GameOptions.waves[wave][0]; 
     var numWizards = GameOptions.waves[wave][1]; 
     for(var i=0;i<numSkeleton;i++){
@@ -740,6 +793,8 @@ function spawnWave(wave){
         wizard.startAttackAnimation(Math.random()*2000);
         wizardArray.push( wizard);
     }
+
+
 }
 
 const raycaster = new THREE.Raycaster();
@@ -768,6 +823,7 @@ function animate(time) {
             gameStat = GameStatus.Playng;
             camera.position.x = 0;
             camera.position.z = -5;
+            gameStat= GameStatus.Playng;
             camera.lookAt(pg.position.x,0.7,pg.position.z);
             //pg.add(camera);
             //Spawining first wave 
@@ -816,15 +872,23 @@ function animate(time) {
             TWEEN.removeAll();
             console.log("Wave won!");
             console.log("Wave "+wave);
-            spawnWave(wave);
-            wave++;
-            gameStat= GameStatus.Playng;
+            leftUpgrade.style.display = 'block'; 
+            middleUpgrade.style.display = 'block';
+            rightUpgrade.style.display = 'block';
+            gameWonDiv.style.display = 'block';
+            gameWonDiv.textContent = ' Wave clear!'
+            smallWonDiv.style.display = 'block';
+            overlayDiv.style.display = 'block';
+            gameStat = GameStatus.ChoosingUpgrade;
         }else{
             console.log("Game Won!");
         }
     } else if (gameStat == GameStatus.Lost){
         console.log("Game Over!")
-
+        overlayDiv.style.display = 'block';
+        gameWonDiv.style.display = 'block';
+        tryagainBtn.style.display = 'block';
+        gameWonDiv.textContent = 'Game Over!'
     }
     prevTime = time;
     TWEEN.update(time);

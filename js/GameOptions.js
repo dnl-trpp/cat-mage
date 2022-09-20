@@ -1,5 +1,7 @@
 var GameOptions = {
     playerHealth: 2,
+    fireballHitSize: 0.2,
+    fireballDamage: 0.5,
     invulnerability: 2000,
     forwardSpeed: 0.008,
     cameraSpeedX: 0.003,

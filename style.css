@@ -1,59 +1,286 @@
+#overlay {
+	position: absolute;
+	top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  background: grey;
+	text-align: center;
+  font-size: 100px;
+	z-index: 50;
+	display:block;
+}
+
+#GameWonDiv {
+	position: absolute;
+	top: 0;
+  color:white;
+	width: 100%;
+	text-align: center;
+  font-size: 100px;
+	z-index: 100;
+	display:block;
+}
+#SmallWonDiv {
+	position: absolute;
+	top: 100px;
+  color:white;
+	width: 100%;
+	text-align: center;
+  font-size: 50px;
+	z-index: 100;
+	display:block;
+}
+
+
 #Menu {
 	position: absolute;
-	top: 10px;
-	width: 10%;
+	bottom: 25%;
+  left: 45%;
+	width: 200px;
 	text-align: center;
 	z-index: 100;
-    margin: 45%;
+	display:block;
+}
+
+
+#TryAgain {
+	position: absolute;
+	bottom: 25%;
+  left: 45%;
+	width: 200px;
+	text-align: center;
+	z-index: 100;
 	display:block;
 }
 
 
 .btn-flip {
-    opacity: 1;
-    outline: 0;
-    color: #fff;
-    line-height: 40px;
-    position: relative;
-    text-align: center;
-    letter-spacing: 1px;
-    display: inline-block;
-    text-decoration: none;
-    font-family: "Open Sans";
-    text-transform: uppercase;
-  }
-  .btn-flip:hover:after {
-    opacity: 1;
-    transform: translateY(0) rotateX(0);
-  }
-  .btn-flip:hover:before {
-    opacity: 0;
-    transform: translateY(50%) rotateX(90deg);
-  }
-  .btn-flip:after {
-    top: 0;
-    left: 0;
-    opacity: 0;
-    width: 100%;
-    color: #323237;
-    display: block;
-    transition: 0.5s;
-    position: absolute;
-    background: #adadaf;
-    content: attr(data-back);
-    transform: translateY(-50%) rotateX(90deg);
-  }
-  .btn-flip:before {
-    top: 0;
-    left: 0;
-    opacity: 1;
-    color: #adadaf;
-    display: block;
-    padding: 0 30px;
-    line-height: 40px;
-    transition: 0.5s;
-    position: relative;
-    background: #323237;
-    content: attr(data-front);
-    transform: translateY(0) rotateX(0);
-  }
+  opacity: 1;
+  outline: 0;
+  color: #fff;
+  line-height: 40px;
+  position: relative;
+  text-align: center;
+  letter-spacing: 1px;
+  display: inline-block;
+  text-decoration: none;
+  font-family: "Open Sans";
+  text-transform: uppercase;
+  width: 100%;
+}
+.btn-flip:hover:after {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+}
+.btn-flip:hover:before {
+  opacity: 0;
+  transform: translateY(50%) rotateX(90deg);
+}
+.btn-flip:after {
+  top: 0;
+  left: 0;
+  opacity: 0;
+  width: 100%;
+  color: #323237;
+  display: block;
+  transition: 0.5s;
+  position: absolute;
+  background: #adadaf;
+  content: attr(data-back);
+  transform: translateY(-50%) rotateX(90deg);
+}
+.btn-flip:before {
+  top: 0;
+  left: 0;
+  opacity: 1;
+  color: #adadaf;
+  display: block;
+  padding: 0 30px;
+  line-height: 40px;
+  transition: 0.5s;
+  position: relative;
+  background: #323237;
+  content: attr(data-front);
+  transform: translateY(0) rotateX(0);
+}
+
+
+
+#PowerUpsDiv {
+	position: absolute;
+	top: 55%;
+	width: 100%;
+	text-align: center;
+	z-index: 100;
+	display:block;
+}
+
+.btn-flip-left{
+  opacity: 1;
+  outline: 0;
+  color: #fff;
+  line-height: 30px;
+  left: 30%;
+  width:110px;
+  height:110px;
+  position: absolute;
+  text-align: center;
+  letter-spacing: 1px;
+  display: block;
+  text-decoration: none;
+  font-family: "Open Sans";
+}
+.btn-flip-left:hover:after {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+}
+.btn-flip-left:hover:before {
+  opacity: 0;
+  transform: translateY(50%) rotateX(90deg);
+}
+.btn-flip-left:after {
+  top: 0;
+  left: 0;
+  opacity: 0;
+  width: 100%;
+  color: #323237;
+  display: block;
+  transition: 0.5s;
+  position: absolute;
+  background: #adadaf;
+  content: attr(data-back);
+  transform: translateY(-50%) rotateX(90deg);
+     border-style: solid;
+  border-color: white;
+}
+.btn-flip-left:before {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  opacity: 1;
+  display: block;
+  transition: 0.5s;
+  position: relative;
+  background: #323237;
+  content: url('./img/hearth.png');
+  transform: translateY(0) rotateX(0);
+     border-style: solid;
+  border-color: white;
+  max-width:100%;
+max-height:100%;
+}
+
+.btn-flip-middle{
+  opacity: 1;
+  outline: 0;
+  color: #fff;
+  line-height: 30px;
+  left: 45%;
+  width:110px;
+  height:110px;
+  position: absolute;
+  text-align: center;
+  letter-spacing: 1px;
+  display: block;
+  text-decoration: none;
+  font-family: "Open Sans";
+}
+.btn-flip-middle:hover:after {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+}
+.btn-flip-middle:hover:before {
+  opacity: 0;
+  transform: translateY(50%) rotateX(90deg);
+}
+.btn-flip-middle:after {
+  top: 0;
+  left: 0;
+  opacity: 0;
+  width: 100%;
+  color: #323237;
+  display: block;
+  transition: 0.5s;
+  position: absolute;
+  background: #adadaf;
+  content: attr(data-back);
+  transform: translateY(-50%) rotateX(90deg);
+     border-style: solid;
+  border-color: white;
+}
+.btn-flip-middle:before {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  opacity: 1;
+  display: block;
+  transition: 0.5s;
+  position: relative;
+  background: #323237;
+  content: url('./img/fireball.png');
+  transform: translateY(0) rotateX(0);
+     border-style: solid;
+  border-color: white;
+  max-width:100%;
+max-height:100%;
+}
+
+.btn-flip-right{
+  opacity: 1;
+  outline: 0;
+  color: #fff;
+  line-height: 30px;
+  left: 60%;
+  width:110px;
+  height:110px;
+  position: absolute;
+  text-align: center;
+  letter-spacing: 1px;
+  display: block;
+  text-decoration: none;
+  font-family: "Open Sans";
+}
+.btn-flip-right:hover:after {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+}
+.btn-flip-right:hover:before {
+  opacity: 0;
+  transform: translateY(50%) rotateX(90deg);
+}
+.btn-flip-right:after {
+  top: 0;
+  left: 0;
+  opacity: 0;
+  width: 100%;
+  color: #323237;
+  display: block;
+  transition: 0.5s;
+  position: absolute;
+  background: #adadaf;
+  content: attr(data-back);
+  transform: translateY(-50%) rotateX(90deg);
+     border-style: solid;
+  border-color: white;
+}
+.btn-flip-right:before {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  opacity: 1;
+  display: block;
+  transition: 0.5s;
+  position: relative;
+  background: #323237;
+  content: url('./img/range.png');
+  transform: translateY(0) rotateX(0);
+     border-style: solid;
+  border-color: white;
+  max-width:100%;
+max-height:100%;
+}
