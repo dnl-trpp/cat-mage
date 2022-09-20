@@ -17,9 +17,10 @@ const GameStatus = {
     Debug:5,
     Win:6,
     Lost:7,
-    ChoosingUpgrade:8
+    ChoosingUpgrade:8,
+    Loading:9
 }
-var gameStat = GameStatus.Menu;
+var gameStat = GameStatus.Loading;
 
 //PressedKeys dict to handle input
 var PressedKeys = {
@@ -806,7 +807,15 @@ function animate(time) {
 	requestAnimationFrame( animate );
     animateCharacter(time,deltaTime);
 
-    if(gameStat==GameStatus.Debug){
+    if(gameStat == GameStatus.Loading){
+        //Load all external gltf
+        if(Skeleton.loaded && Wizard.loaded && walls.length>0 && playerMesh) {
+            document.getElementById('LoadingScreen').style.display = 'none';
+            gameStat= GameStatus.Menu;
+        }
+
+    }
+    else if(gameStat==GameStatus.Debug){
         camera.position.y = 10;
         camera.position.x =0;
         camera.position.z = 0;

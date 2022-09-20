@@ -4,8 +4,8 @@ import { TWEEN } from './tween.module.min.js';
 import * as THREE from './three.module.js';
 
 class Wizard{
-    
     static{
+        Wizard.loaded = false;
         const gltfLoader = new GLTFLoader();
         //Load Wizard
         gltfLoader.load('./models/Wizard/scene.gltf', (gltf) => {
@@ -44,7 +44,7 @@ class Wizard{
             head.attach(leftMustache);
             rightHand.attach(weapon);
 
- 
+            Wizard.loaded = true;
             console.log(dumpObject(Wizard.root).join('\n'));
         });
     }
