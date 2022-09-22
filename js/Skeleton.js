@@ -55,7 +55,7 @@ class Skeleton{
 
             
             //scene.add(root);
-            console.log(dumpObject(Skeleton.root).join('\n'));
+            //console.log(dumpObject(Skeleton.root).join('\n'));
         
             //Shadow caster
             const geometry = new THREE.SphereGeometry(0.5,32,16);

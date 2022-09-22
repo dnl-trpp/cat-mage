@@ -44,8 +44,21 @@ class Wizard{
             head.attach(leftMustache);
             rightHand.attach(weapon);
 
+           //Shadow caster
+           const geometry = new THREE.SphereGeometry(0.5,32,16);
+           const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+           material.transparent = true;
+           material.opacity = 0.0;
+           const capsule = new THREE.Mesh( geometry, material );
+           capsule.position.y = 1.0;
+       
+       
+           capsule.castShadow = true;
+           Wizard.root.add( capsule );
+
+
             Wizard.loaded = true;
-            console.log(dumpObject(Wizard.root).join('\n'));
+           // console.log(dumpObject(Wizard.root).join('\n'));
         });
     }
 

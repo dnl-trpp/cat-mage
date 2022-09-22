@@ -55,6 +55,10 @@ middleUpgrade.style.display = 'none';
 var rightUpgrade =  document.getElementById("rightPowerup");
 rightUpgrade.style.display = 'none';
 leftUpgrade.addEventListener("click",function(){
+    var img = document.createElement('img');
+    img.setAttribute('class','heart');
+    img.setAttribute('src','./img/hearth.png');
+    document.getElementById('healtBar').appendChild(img);
     GameOptions.playerHealth++;
     cleanupWave();
 });
@@ -174,7 +178,6 @@ light3.shadow.camera.near = 0.1;
 light3.shadow.camera.far = 100;
 scene.add(light3);
 
-
 //Global Objects
 var fireBallsArray = [];
 var enemyArray = [];
@@ -195,6 +198,9 @@ var playerMaterial;
 var invulnerabilityTween;
 const gltfLoader = new GLTFLoader();
 
+var tailbasekf1;
+var tailmiddlef1;
+var headkf1;
 //Load main character
 gltfLoader.load('./models/Mage/scene.gltf', (gltf) => {
   var root = gltf.scene;
@@ -234,6 +240,52 @@ gltfLoader.load('./models/Mage/scene.gltf', (gltf) => {
   //console.log(dumpObject(pg).join('\n'));
   //console.log(pg);
   playerMesh.scale.set(0.5,0.5,0.5);
+
+  var head = pg.getObjectByName('head_5');
+  //HEAD ANIMATION SETUP
+  headkf1 = new TWEEN.Tween(head.rotation)
+  .to( {x:-1.3/360*6.28, y:8.4/360*6.28,z:1.85/360*6.28},1000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  var headkf2 = new TWEEN.Tween(head.rotation)
+  .to( {x:-12/360*6.28, y:-22/360*6.28,z:-1.4/360*6.28},2000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  var headkf3 = new TWEEN.Tween(head.rotation)
+  .to( {x:head.rotation.x, y:head.rotation.y,z:head.rotation.z},1000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  headkf1.chain(headkf2);
+  headkf2.chain(headkf3);
+  headkf3.chain(headkf1);
+  headkf1.start();
+
+  //TAIL ANIMATION
+  var tailbase = pg.getObjectByName('tail_base_8');
+  tailbasekf1 = new TWEEN.Tween(tailbase.rotation)
+  .to( {x:-65.25/360*6.28, y:-19.3/360*6.28,z:-9.0/360*6.28},2000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  var tailbasekf2 = new TWEEN.Tween(tailbase.rotation)
+  .to( {x:tailbase.rotation.x, y:tailbase.rotation.y,z:tailbase.rotation.z},2000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  tailbasekf1.chain(tailbasekf2);
+  tailbasekf2.chain(tailbasekf1);
+  tailbasekf1.start();
+
+  var tailmiddle = pg.getObjectByName('tail_middle_7');
+  tailmiddlef1 = new TWEEN.Tween(tailmiddle.rotation)
+  .to( {x:-58.25/360*6.28, y:-24.8/360*6.28,z:-87.4/360*6.28},3000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  var tailmiddlef2 = new TWEEN.Tween(tailmiddle.rotation)
+  .to( {x:tailmiddle.rotation.x, y:tailmiddle.rotation.y,z:tailmiddle.rotation.z},3000)
+  .easing(TWEEN.Easing.Cubic.InOut);
+
+  tailmiddlef1.chain(tailmiddlef2);
+  tailmiddlef2.chain(tailmiddlef1);
+  tailmiddlef1.start();
 });
 
 var walls = [];
@@ -242,7 +294,7 @@ var wallMaterial2;
 //Load Props
 gltfLoader.load('./models/Props/scene.gltf', (gltf) => {
     var root = gltf.scene;
-    console.log(dumpObject(root).join('\n'));
+    //console.log(dumpObject(root).join('\n'));
 
 
     //Load walls
@@ -264,21 +316,23 @@ gltfLoader.load('./models/Props/scene.gltf', (gltf) => {
         ob.add(wall);
     }
     ob.position.z = -25;
+    scale=0.9;
+    ob.scale.set(scale,scale,scale);
     walls.push(ob);
     scene.add(ob);
-    console.log(ob);
+    //console.log(ob);
     ob = ob.clone();
     ob.position.z = 25;
     walls.push(ob);
     scene.add(ob);
     ob = ob.clone();
-    ob.position.x = 24;
+    ob.position.x = 25;
     ob.position.z = 0;
     ob.rotation.y = Math.PI /2.0;
     walls.push(ob);
     scene.add (ob);
     ob = ob.clone();
-    ob.position.x = -24;
+    ob.position.x = -25;
     ob.rotation.y = -Math.PI /2.0;
     walls.push(ob);
     scene.add (ob);
@@ -533,6 +587,8 @@ function moveSkeleton(time,deltaTime){
             invulnerabilityTween.start();
             //Damage pg
             pg.health -= enemy.damage;
+            document.getElementById('healtBar').firstChild.remove();
+
             console.log("Hit: "+pg.health);
             if(pg.health<=0){
                 //Destroy pg
@@ -583,6 +639,7 @@ function checkWizardballPlayerCollision(time){
                     .yoyo(true)
                     .repeat(Infinity);
                 invulnerabilityTween.start();
+                document.getElementById('healtBar').firstChild.remove();
 
                 //Damage pg
                 pg.health -= wizardball.damage;
@@ -659,7 +716,7 @@ function checkFireballEnemyCollision(){
 
 function moveWizardBalls(deltaTime){
     for(var i=wizardBallsArray.length-1;i>=0;i--){
-
+        wizardBallsArray[i].moveSprite(deltaTime);
         wizardBallsArray[i].mesh.position.z -= wizardBallsArray[i].direction.y*GameOptions.wizardballSpeed*deltaTime;
         wizardBallsArray[i].mesh.position.x -= wizardBallsArray[i].direction.x*GameOptions.wizardballSpeed*deltaTime;
         wizardBallsArray[i].ttl-= deltaTime;
@@ -669,19 +726,26 @@ function moveWizardBalls(deltaTime){
             wizardBallsArray.splice(i,1);
             //renderer.renderLists.dispose();
         }
+
     }
 }
 
 
 function moveFireballs(deltaTime){
     for(var i=fireBallsArray.length-1;i>=0;i--){
+        fireBallsArray[i].moveSprite(deltaTime);
         fireBallsArray[i].mesh.position.z += Math.cos(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed*deltaTime;
         fireBallsArray[i].mesh.position.x += Math.sin(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed*deltaTime;
         fireBallsArray[i].ttl-= deltaTime;
         if( fireBallsArray[i].ttl < 0 ) 
         {
-            scene.remove(fireBallsArray[i].mesh);
-            fireBallsArray.splice(i,1);
+            var scaleSpeed = 0.005;
+            fireBallsArray[i].mesh.scale.set(fireBallsArray[i].mesh.scale.x-deltaTime*scaleSpeed,fireBallsArray[i].mesh.scale.y-deltaTime*scaleSpeed,fireBallsArray[i].mesh.scale.y-deltaTime*scaleSpeed);
+            fireBallsArray[i].mesh.position.y -= 0.01;
+            if(fireBallsArray[i].mesh.scale.x<= 0) {
+                scene.remove(fireBallsArray[i].mesh);
+                fireBallsArray.splice(i,1);
+            }
             //renderer.renderLists.dispose();
         }
     }
@@ -718,11 +782,13 @@ function handleControls(deltaTime){
         if(!wallCollision(pg.position.x + offZ)) pg.position.x += offZ;
     }
     if(PressedKeys.Up){
+        if(camera.position.y>= 37.7) return;
         camera.position.y += GameOptions.cameraSpeedY*deltaTime;
         
         camera.lookAt(pg.position.x,0.7,pg.position.z);
     }
     if(PressedKeys.Down){
+        if(camera.position.y<= 3.17) return;
         camera.position.y -= GameOptions.cameraSpeedY*deltaTime;
         camera.lookAt(pg.position.x,0.7,pg.position.z);
     }
@@ -733,14 +799,14 @@ var charAnimProp={
     maxFloatingOffset:0.1
 }
 
-
+var flameRotationSpeedFactor=40;
 function animateCharacter(time,deltaTime){
     //console.log(flame1.rotation.y);
     if(deltaTime){
-        flame1.rotation.y += 0.025*deltaTime/10;
+        flame1.rotation.y += 0.015*deltaTime/flameRotationSpeedFactor;
         //console.log(flame1.rotation.y);
-        flame2.rotation.y -= 0.03*deltaTime/10;
-        flame3.rotation.y += 0.027*deltaTime/10;
+        flame2.rotation.y -= 0.020*deltaTime/flameRotationSpeedFactor;
+        flame3.rotation.y += 0.017*deltaTime/flameRotationSpeedFactor;
     //console.log(flame1.rotation.y);
     }
 
@@ -779,17 +845,22 @@ function wizardFire(staff){
 function spawnWave(wave){
 
     pg.health = GameOptions.playerHealth;
+    document.getElementById('healtBar').innerHTML='';
+    for(var i=0;i<pg.health;i++){
+        var img = document.createElement('img');
+        img.setAttribute('class','heart');
+        img.setAttribute('src','./img/hearth.png');
+        document.getElementById('healtBar').appendChild(img);
+    }
 
     var numSkeleton = GameOptions.waves[wave][0]; 
     var numWizards = GameOptions.waves[wave][1]; 
     for(var i=0;i<numSkeleton;i++){
         //Spawn skeleton in random position
-        console.log("spawn skel");
         enemyArray.push(new Skeleton(scene,Math.floor(Math.random()*30-15),Math.floor(Math.random() * 30-15)));
     }
     for(var i=0;i<numWizards;i++){
         //Spawn skeleton in random position
-        console.log("spawn wiza");
         var wizard=new Wizard(scene,Math.floor(Math.random()*30-15),Math.floor(Math.random()*20-5),wizardFire);
         wizard.startAttackAnimation(Math.random()*2000);
         wizardArray.push( wizard);
@@ -829,6 +900,7 @@ function animate(time) {
             animateCamera();
             camera.lookAt(pg.position.x,0.7,pg.position.z);
         }else{
+            flameRotationSpeedFactor=10;
             gameStat = GameStatus.Playng;
             camera.position.x = 0;
             camera.position.z = -5;
@@ -839,6 +911,7 @@ function animate(time) {
             console.log("Wave 1");
             spawnWave(wave);
             wave++;
+            document.getElementById('healtBar').style.display='block';
             
         }
         
@@ -879,6 +952,9 @@ function animate(time) {
         if(wave < GameOptions.waves.length) {
             //Cleaning up
             TWEEN.removeAll();
+            tailmiddlef1.start();
+            tailbasekf1.start();
+            headkf1.start();
             console.log("Wave won!");
             console.log("Wave "+wave);
             leftUpgrade.style.display = 'block'; 
