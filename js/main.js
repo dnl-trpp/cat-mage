@@ -330,6 +330,7 @@ gltfLoader.load('./models/Mage/scene.gltf', (gltf) => {
 });
 
 var walls = [];
+var barrels = [];
 var wallMaterial1;
 var wallMaterial2;
 //Load Props
@@ -400,12 +401,9 @@ gltfLoader.load('./models/Props/scene.gltf', (gltf) => {
     barrelOb.position.x = 3;
     barrelOb.position.y = 0.5;
     barrelOb.position.z = -20;
-    while(barrelOb.position.x > -2 && barrelOb.position.x <2 && barrelOb.position.z > -17 && barrelOb.position.z < -13){
-        barrelOb.position.x = Math.random()*40-20;
-        barrelOb.position.z = Math.random()*40-20;
-    }
     barrelOb.scale.set(0.7,0.7,0.7);
     scene.add(barrelOb);
+    barrels.push(barrelOb);
 
     for (var i=0;i<5;i++){
         barrelOb = barrelOb.clone();
@@ -417,23 +415,8 @@ gltfLoader.load('./models/Props/scene.gltf', (gltf) => {
         }
         barrelOb.rotation.z = Math.random()*6;
         scene.add(barrelOb);
+        barrels.push(barrelOb);
     }
-
-    //Load broken barrel
-    //var barrelOb2 = new THREE.Object3D();
-    //for(let i=16;i<26;i++){
-    //    root.getObjectByName('barrel0'+i).position.x = 0;
-    //    root.getObjectByName('barrel0'+i).position.z = 0;
-    //    root.getObjectByName('barrel0'+i).scale.set(1,1,1);
-    //    console.log(root.getObjectByName('barrel0'+i).position);
-    //    barrelOb2.add(root.getObjectByName('barrel0'+i));
-//
-    //}
-    //barrelOb2.position.x = 0; 
-    //barrelOb2.position.y = 0.5;
-    //barrelOb2.position.z = 0;
-    //barrelOb2.scale.set(0.7,0.7,0.7);
-    //scene.add(barrelOb2);
 
     //Load candle
     var candleOb = new THREE.Object3D();
@@ -684,7 +667,8 @@ function checkWizardballPlayerCollision(time){
                     .yoyo(true)
                     .repeat(Infinity);
                 invulnerabilityTween.start();
-                document.getElementById('healtBar').firstChild.remove();
+                var healtBar= document.getElementById('healtBar');
+                if(healtBar.firstChild)healtBar.firstChild.remove();
 
                 //Damage pg
                 if(!invincible) pg.health -= wizardball.damage;
@@ -820,17 +804,34 @@ function moveFireballs(deltaTime){
 function wallCollision(pos){
     return pos > 23 || pos < -23;
 }
+function barrelCollisionZ(pos){
+    for(var i=0; i<barrels.length; i++){
+        if(pg.position.distanceTo(barrels[i].position) < 1 && 
+        Math.abs(pos-barrels[i].position.z)< 0.7
+        ) return true;
+    }
+    return false;
+}
+function barrelCollisionX(pos){
+    for(var i=0; i<barrels.length; i++){
+        if(pg.position.distanceTo(barrels[i].position) < 1 &&
+         Math.abs(pos-barrels[i].position.x)< 0.7
+         ) return true;
+    }
+    return false;
+}
+
 
 function handleControls(deltaTime){
     var offZ = Math.cos(pg.rotation.y)*GameOptions.forwardSpeed*deltaTime;
     var offX = Math.sin(pg.rotation.y)*GameOptions.forwardSpeed*deltaTime;
     if (PressedKeys.W){
-        if(!wallCollision(pg.position.z+offZ)) pg.position.z += offZ;
-        if(!wallCollision(pg.position.x+offX)) pg.position.x += offX;
+        if(!wallCollision(pg.position.z+offZ)&& !barrelCollisionZ(pg.position.z+offZ)) pg.position.z += offZ;
+        if(!wallCollision(pg.position.x+offX)&& !barrelCollisionX(pg.position.x+offX)) pg.position.x += offX;
     }
     if (PressedKeys.S){
-        if(!wallCollision(pg.position.z-offZ)) pg.position.z -= offZ;
-        if(!wallCollision(pg.position.x-offX)) pg.position.x -= offX;
+        if(!wallCollision(pg.position.z-offZ)&& !barrelCollisionZ(pg.position.z-offZ)) pg.position.z -= offZ;
+        if(!wallCollision(pg.position.x-offX)&& !barrelCollisionX(pg.position.x-offX)) pg.position.x -= offX;
     }
     if(PressedKeys.Q){
         pg.rotation.y += GameOptions.cameraSpeedX*deltaTime;
@@ -839,12 +840,12 @@ function handleControls(deltaTime){
         pg.rotation.y -= GameOptions.cameraSpeedX*deltaTime;
     }
     if(PressedKeys.D){
-        if(!wallCollision(pg.position.z+ offX)) pg.position.z += offX;
-        if(!wallCollision(pg.position.x- offZ)) pg.position.x -= offZ;
+        if(!wallCollision(pg.position.z+ offX)&&!barrelCollisionZ(pg.position.z+offX)) pg.position.z += offX;
+        if(!wallCollision(pg.position.x- offZ)&&!barrelCollisionX(pg.position.x-offZ)) pg.position.x -= offZ;
     }
     if(PressedKeys.A){
-        if(!wallCollision(pg.position.z- offX)) pg.position.z -= offX;
-        if(!wallCollision(pg.position.x + offZ)) pg.position.x += offZ;
+        if(!wallCollision(pg.position.z- offX)&& !barrelCollisionZ(pg.position.z-offX)) pg.position.z -= offX;
+        if(!wallCollision(pg.position.x + offZ)&&!barrelCollisionX(pg.position.x+offZ)) pg.position.x += offZ;
     }
     if(PressedKeys.Up){
         if(camera.position.y>= 37.7) return;
@@ -937,6 +938,7 @@ function spawnWave(wave){
 const raycaster = new THREE.Raycaster();
 var prevTime=0;
 var deltaTime=0;
+var previousIntersect=1;
 //render loop
 function animate(time) {
     deltaTime = time-prevTime;
@@ -1001,19 +1003,20 @@ function animate(time) {
             raycaster.setFromCamera( new THREE.Vector2(0,0), camera );
             const intersects = raycaster.intersectObjects( walls);
 
-            if (intersects.length>0){
+            if (intersects.length>0 && previousIntersect!=intersects.length){
 
                 wallMaterial1.transparent = true;
                 wallMaterial1.opacity = 0.3;
                 wallMaterial2.transparent = true;
                 wallMaterial2.opacity = 0.3;
 
-            }else{
+            }else if(previousIntersect!=intersects.length){
                 wallMaterial1.transparent = false;
                 wallMaterial2.transparent = false;
                 wallMaterial1.opacity = 1.0;
                 wallMaterial2.opacity = 1.0;
             }
+            previousIntersect=intersects.length;
 
 
 
