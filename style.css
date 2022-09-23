@@ -1,3 +1,43 @@
+#wasd {
+	position: absolute;
+	bottom:0;
+  left: 0;
+  width: 400px;
+  height: 400px;
+  opacity: 1;
+	text-align: center;
+  font-size: 100px;
+	z-index: 100;
+	display:block;
+}
+#spacebar {
+	position: absolute;
+  margin: auto;
+	bottom:0;
+  left:0;
+  right:0;
+  width: 300px;
+  height: 300px;
+  opacity: 1;
+	text-align: center;
+  font-size: 100px;
+	z-index: 100;
+	display:block;
+}
+
+#arrows {
+	position: absolute;
+	bottom:0;
+  right: 0;
+  width: 400px;
+  height: 400px;
+  opacity: 1;
+	text-align: center;
+  font-size: 100px;
+	z-index: 100;
+	display:block;
+}
+
 #LoadingScreen {
 	position: absolute;
 	top: 0;
@@ -12,6 +52,8 @@
 	display:block;
 }
 #loadingImage {
+  max-width: 100%;
+  max-height: 100%;
     position: absolute;
     margin: auto;
     top: 0;
@@ -73,14 +115,210 @@
 
 #Menu {
 	position: absolute;
-	bottom: 25%;
-  left: 45%;
+  margin: auto;
+  left: 0;
+  right: 0;
+  bottom: 10%;
 	width: 200px;
 	text-align: center;
 	z-index: 100;
 	display:block;
 }
+[type="checkbox"]:not(:checked),
+	[type="checkbox"]:checked {
+		position: absolute;
+		left: 0;
+		opacity: 0.01;
+	}
+	[type="checkbox"]:not(:checked) + label,
+	[type="checkbox"]:checked + label {
+		position: relative;
+		padding-left: 2.3em;
+		font-size: 1.05em;
+		line-height: 1.7;
+		cursor: pointer;
+	}
 
+	/* checkbox aspect */
+	[type="checkbox"]:not(:checked) + label:before,
+	[type="checkbox"]:checked + label:before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 1.4em;
+		height: 1.4em;
+		border: 1px solid #aaa;
+		background: #FFF;
+		border-radius: .2em;
+		box-shadow: inset 0 1px 3px rgba(0,0,0, .1), 0 0 0 rgba(123, 112, 126, 0.2);
+		-webkit-transition: all .275s;
+				transition: all .275s;
+	}
+
+	/* checked mark aspect */
+	[type="checkbox"]:not(:checked) + label:after,
+	[type="checkbox"]:checked + label:after {
+		content: '✕';
+		position: absolute;
+		top: .525em;
+		left: .18em;
+		font-size: 1.375em;
+		color: #79716a;
+		line-height: 0;
+		-webkit-transition: all .2s;
+				transition: all .2s;
+	}
+
+	/* checked mark aspect changes */
+	[type="checkbox"]:not(:checked) + label:after {
+		opacity: 0;
+		-webkit-transform: scale(0) rotate(45deg);
+				transform: scale(0) rotate(45deg);
+	}
+
+	[type="checkbox"]:checked + label:after {
+		opacity: 1;
+		-webkit-transform: scale(1) rotate(0);
+				transform: scale(1) rotate(0);
+	}
+
+	/* Disabled checkbox */
+	[type="checkbox"]:disabled:not(:checked) + label:before,
+	[type="checkbox"]:disabled:checked + label:before {
+		box-shadow: none;
+		border-color: #bbb;
+		background-color: #e9e9e9;
+	}
+
+	[type="checkbox"]:disabled:checked + label:after {
+		color: #777;
+	}
+
+	[type="checkbox"]:disabled + label {
+		color: #aaa;
+	}
+
+	/* Accessibility */
+	[type="checkbox"]:checked:focus + label:before,
+	[type="checkbox"]:not(:checked):focus + label:before {
+		box-shadow: inset 0 1px 3px rgba(0,0,0, .1), 0 0 0 6px rgba(159, 145, 162, 0.2);
+	}
+
+label{
+  color: aliceblue;
+}
+
+.range {
+  background: #fff;
+  height: 20px;
+  width: 55%;
+  border-radius: 5px;
+  box-shadow: 1px 5px 5px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 80%;
+  height: 100%;
+  background: transparent;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-top: -5px;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 60%;
+  height: 9px;
+  background: #bdbdbd;
+  border-radius: 3rem;
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  cursor: pointer;
+}
+input[type=range]:hover::-webkit-slider-runnable-track {
+  background: #3d3c3c;
+}
+input[type=range]::-ms-track {
+  width: 60%;
+  cursor: pointer;
+  height: 9px;
+  -ms-transition: all 0.5s;
+  transition: all 0.5s;
+  /* Hides the slider so custom styles can be added */
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-top: -5px;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+input[type=range]::-ms-fill-lower {
+  background: #bdbdbd;
+  border-radius: 3rem;
+}
+input[type=range]:focus::-ms-fill-lower {
+  background: #ff6e40;
+}
+input[type=range]::-ms-fill-upper {
+  background: #bdbdbd;
+  border-radius: 3rem;
+}
+input[type=range]:focus::-ms-fill-upper {
+  background: #ff6e40;
+}
+input[type=range]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-top: -5px;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+input[type=range]::-moz-range-track {
+  width: 60%;
+  height: 9px;
+  background: #bdbdbd;
+  border-radius: 3rem;
+  -moz-transition: all 0.5s;
+  transition: all 0.5s;
+  cursor: pointer;
+}
+input[type=range]:hover::-moz-range-track {
+  background: #ff6e40;
+}
+
+#CheckMenu {
+  color:white;
+	position: absolute;
+  margin: auto;
+  line-height: 20px;
+  top:0;
+  left: 120%;
+	width: 200px;
+	text-align: left;
+	z-index: 100;
+	display:block;
+}
 
 #TryAgain {
 	position: absolute;
@@ -106,6 +344,7 @@
   font-family: "Open Sans";
   text-transform: uppercase;
   width: 100%;
+  height: 50px;
 }
 .btn-flip:hover:after {
   opacity: 1;

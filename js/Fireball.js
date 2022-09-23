@@ -16,7 +16,10 @@ class Fireball{
         this.mesh = new THREE.Mesh( Fireball.fireballGeometry, Fireball.fireballMaterial );
         this.mesh.position.copy(pos);
         this.mesh.position.y+=0.5;
-        for(var i=0;i<10;i++){
+        this.exploding = false;
+        this.exploded = false;
+        this.explodingAnimTime = 200;
+        if(GameOptions.particles) for(var i=0;i<10;i++){
             this.sprites.push(this.createSprite());
             this.mesh.add(this.sprites[i]);
         }
@@ -33,12 +36,31 @@ class Fireball{
         sprite.scale.set(GameOptions.fireballHitSize/4,GameOptions.fireballHitSize/4,GameOptions.fireballHitSize/4);
         sprite.position.x = Math.random()*0.5-0.25;
         sprite.position.z = Math.random()*0.5-0.25;
-        sprite.position.y = Math.random()*0.5-0.25;
+        sprite.position.y = Math.random()*0.5-0.3+GameOptions.fireballHitSize;
         return sprite;
     }
     moveSprite(deltaTime){
 
+        if(this.exploding){
+            this.explodingAnimTime -= deltaTime;
+            if(this.explodingAnimTime<0) this.exploded = true;
+        }
         for(var i=0;i< this.sprites.length;i++){
+            if(this.exploding){
+                this.mesh.scale.set(1,1,1);
+                if(!this.sprites[i].dir) {
+                    this.sprites[i].scale.set(0.1,0.1,0.1);
+                    this.sprites[i].position.x = 0;
+                    this.sprites[i].position.y = 0;
+                    this.sprites[i].position.z = 0;
+                    this.sprites[i].dir = new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5);
+                    continue;
+                }
+                this.sprites[i].position.x += this.sprites[i].dir.x*deltaTime*0.03;
+                this.sprites[i].position.y += this.sprites[i].dir.y*deltaTime*0.03;
+                this.sprites[i].position.z += this.sprites[i].dir.z*deltaTime*0.03;
+                continue;
+            }
             this.sprites[i].position.y += 0.0007*deltaTime;
             if (this.sprites[i].position.y>0.5) this.sprites[i].position.y = Math.random(0.3)-0.15;
         }

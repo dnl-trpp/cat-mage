@@ -18,13 +18,38 @@
 			}
 		</script>
 		<script type="module" src="js/main.js"></script>
+
+		<div id="wasd">
+			<img id='loadingImage' src="./img/wasd.png"/>
+		</div>
+		<div id="arrows">
+			<img id='loadingImage' src="./img/arrows.png"/>
+		</div>
+		<div id="spacebar">
+			<img id='loadingImage' src="./img/spacebar.png"/>
+		</div>
 		<div id="healtBar"><img  class='heart' src="./img/hearth.png"/><img  class='heart' src="./img/hearth.png"/></div>
 		<div id="LoadingScreen">
 			<img id='loadingImage' src="./img/Cat Mage.png"/>
 		</div>
 		<div id="overlay"></div>
 		<div id="Menu">
-		<a href="#" id="startGame" class="btn-flip" data-back="Waves Mode" data-front="Play"></a>
+			<div id="CheckMenu">
+				<input type="checkbox" id="enableParticles" checked><label for="enableParticles">PARTICLES</label></input> 
+				<br><br>
+				LIGHT INTENSITY
+				<div class="range">
+					<input id="lightSlider" value=0.8 type="range" step="0.01" min="0" max="1">
+			  </div>
+			  <br>
+			  FOG DISTANCE
+			  <div class="range">
+				  <input id="fogSlider" value=100 type="range" step="1" min="10" max="120">
+			</div>
+			</div>
+		<a href="#" id="startGame" class="btn-flip" data-back="Play" data-front="Easy Mode"></a>
+		<a href="#" id="hardMode" class="btn-flip" data-back="More Challenge!" data-front="Hard Mode"></a>
+		<a href="#" id="invincibleMode" class="btn-flip" data-back="You're invincible!" data-front="God mode"></a>
 		</div>
 		<div id="GameWonDiv"> Wave clear! 
 		</div>

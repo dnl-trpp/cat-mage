@@ -12,6 +12,7 @@ var GameOptions = {
     cameraSpeedY : 0.02,
     skeletonSpeed : 0.0016,
     collisionIntensity : 0.04,
+    particles:true,
     waves : [[1,1],[3,1],[3,2],[5,3],[10,5]]
 }
 

@@ -36,6 +36,15 @@ var PressedKeys = {
 }
 
 //Upgrade Menu
+var wasd= document.getElementById("wasd");
+var arrows = document.getElementById("arrows");
+var spacebar = document.getElementById("spacebar");
+wasd.style.display = 'none';
+arrows.style.display = 'none';
+spacebar.style.display = 'none';
+wasd.style.opacity = 5.0;
+arrows.style.opacity = 5.0;
+spacebar.style.opacity = 5.0;
 var gameWonDiv = document.getElementById("GameWonDiv");
 var smallWonDiv = document.getElementById("SmallWonDiv");
 var overlayDiv = document.getElementById("overlay");
@@ -62,10 +71,15 @@ leftUpgrade.addEventListener("click",function(){
     GameOptions.playerHealth++;
     cleanupWave();
 });
-
+var hardMode=false;
 middleUpgrade.addEventListener("click",function(){
-    GameOptions.fireballDamage += 0.5;
-    GameOptions.fireballHitSize += 0.1;
+    if(hardMode){
+        GameOptions.fireballDamage += 0.2;
+        GameOptions.fireballHitSize += 0.05; 
+    }else{
+        GameOptions.fireballDamage += 0.5;
+        GameOptions.fireballHitSize += 0.1;
+    }
     Fireball.fireballGeometry = new THREE.SphereGeometry(GameOptions.fireballHitSize,32,16);
     cleanupWave();
 });
@@ -94,6 +108,25 @@ document.getElementById("startGame").addEventListener("click", function(){
     document.getElementById("Menu").style.display = 'none';
 
 });
+document.getElementById("hardMode").addEventListener("click", function(){
+    GameOptions.fireballDamage = 0.2,
+    GameOptions.waves = [[2,2],[3,5],[5,5],[10,8],[12,12],[15,13],[20,15]];
+    hardMode=true;
+    gameStat = GameStatus.Starting;
+    document.getElementById("Menu").style.display = 'none';
+
+});
+var invincible=false;
+document.getElementById("invincibleMode").addEventListener("click", function(){
+    invincible=true;
+    gameStat = GameStatus.Starting;
+    document.getElementById("Menu").style.display = 'none';
+
+});
+
+document.getElementById("enableParticles").addEventListener("click",function(){
+    GameOptions.particles=!GameOptions.particles;
+})
 
 //Scene Setup
 const scene = new THREE.Scene();
@@ -101,7 +134,11 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 camera.position.z = 2;
 camera.position.y = 0.5;
 scene.background = new THREE.Color().setHex(0x918c8c);
-scene.fog = new THREE.Fog(0x918c8c, 10, 100);
+scene.fog = new THREE.Fog(0x918c8c, 0, 100);
+
+document.getElementById("fogSlider").addEventListener("input",function(){
+    scene.fog.far=document.getElementById("fogSlider").value;
+});
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -177,6 +214,10 @@ light3.shadow.camera.top = 30;
 light3.shadow.camera.near = 0.1;
 light3.shadow.camera.far = 100;
 scene.add(light3);
+
+document.getElementById("lightSlider").addEventListener("input",function(event){
+    light3.intensity= document.getElementById("lightSlider").value;
+});
 
 //Global Objects
 var fireBallsArray = [];
@@ -472,9 +513,9 @@ function onDocumentKeyDown(event) {
     } else if (keyCode == 68) {
         PressedKeys.D = true;
     }
-      else if (keyCode == 81) {
+      else if (keyCode == 81||keyCode == 37) {
         PressedKeys.Q = true;
-    } else if (keyCode == 69) {
+    } else if (keyCode == 69||keyCode==39) {
         PressedKeys.E = true;
     } else if (keyCode == 32) {
         if(!PressedKeys.Space && gameStat==GameStatus.Playng) fire();
@@ -496,9 +537,9 @@ function onDocumentKeyUp(event) {
         PressedKeys.A = false;
     } else if (keyCode == 68) {
         PressedKeys.D = false;
-    }else if (keyCode == 81) {
+    }else if (keyCode == 81||keyCode == 37) {
         PressedKeys.Q = false;
-    } else if (keyCode == 69) {
+    } else if (keyCode == 69||keyCode==39) {
         PressedKeys.E = false;
     }  else if (keyCode == 32) {
         PressedKeys.Space = false;
@@ -586,8 +627,9 @@ function moveSkeleton(time,deltaTime){
                 .repeat(Infinity);
             invulnerabilityTween.start();
             //Damage pg
-            pg.health -= enemy.damage;
-            document.getElementById('healtBar').firstChild.remove();
+            if(!invincible) pg.health -= enemy.damage;
+            var healtBar= document.getElementById('healtBar');
+            if(healtBar.firstChild)healtBar.firstChild.remove();
 
             console.log("Hit: "+pg.health);
             if(pg.health<=0){
@@ -624,10 +666,13 @@ function checkWizardballPlayerCollision(time){
             var pgPos=new THREE.Vector2(pg.position.x,pg.position.z);
             var wizardballPos=new THREE.Vector2(wizardball.mesh.position.x,wizardball.mesh.position.z);
             if(pgPos.distanceTo(wizardballPos)<= wizardball.hitSize+pg.hitSize){
-                console.log("Collision detected");
                 //Destroy wizardball
-                scene.remove(wizardball.mesh);
-                wizardBallsArray.splice(j,1);
+                if(wizardball.exploding)continue;
+                console.log("Collision detected");
+                wizardball.exploding=true;
+                wizardball.mesh.geometry = new THREE.BufferGeometry();
+                //scene.remove(wizardball.mesh);
+                //wizardBallsArray.splice(j,1);
 
                 //Handle invincibility frames
                 if(time-pg.lastHitTime< GameOptions.invulnerability) continue;
@@ -642,7 +687,7 @@ function checkWizardballPlayerCollision(time){
                 document.getElementById('healtBar').firstChild.remove();
 
                 //Damage pg
-                pg.health -= wizardball.damage;
+                if(!invincible) pg.health -= wizardball.damage;
                 console.log("Hit: "+pg.health);
                 if(pg.health<=0){
                     //Destroy pg
@@ -665,10 +710,13 @@ function checkFireballEnemyCollision(){
             var enemyPos=new THREE.Vector2(enemy.mesh.position.x,enemy.mesh.position.z);
             var fireballPos=new THREE.Vector2(fireball.mesh.position.x,fireball.mesh.position.z);
             if(enemyPos.distanceTo(fireballPos)<= fireball.hitSize+enemy.hitSize){
-                console.log("Collision detected");
                 //Destroy fireball
-                scene.remove(fireball.mesh);
-                fireBallsArray.splice(j,1);
+                //scene.remove(fireball.mesh);
+                if(fireball.exploding) continue;
+                console.log("Collision detected");
+                fireball.exploding = true;
+                fireball.mesh.geometry = new THREE.BufferGeometry();
+                //fireBallsArray.splice(j,1);
 
                 //Damage enemy
                 enemy.health -= fireball.damage;
@@ -692,10 +740,13 @@ function checkFireballEnemyCollision(){
             var wizardPos=new THREE.Vector2(wizard.mesh.position.x,wizard.mesh.position.z);
             var fireballPos=new THREE.Vector2(fireball.mesh.position.x,fireball.mesh.position.z);
             if(wizardPos.distanceTo(fireballPos)<= fireball.hitSize+wizard.hitSize){
-                console.log("Collision detected");
                 //Destroy fireball
-                scene.remove(fireball.mesh);
-                fireBallsArray.splice(j,1);
+                //scene.remove(fireball.mesh);
+                if(fireball.exploding) continue;
+                console.log("Collision detected");
+                fireball.exploding = true;
+                fireball.mesh.geometry = new THREE.BufferGeometry();
+                //fireBallsArray.splice(j,1);
 
                 //Damage wizard
                 wizard.health -= fireball.damage;
@@ -713,10 +764,16 @@ function checkFireballEnemyCollision(){
 
 }
 
-
 function moveWizardBalls(deltaTime){
     for(var i=wizardBallsArray.length-1;i>=0;i--){
         wizardBallsArray[i].moveSprite(deltaTime);
+        if(wizardBallsArray[i].exploding){
+            if(wizardBallsArray[i].exploded){
+                scene.remove(wizardBallsArray[i].mesh);
+                wizardBallsArray.splice(i,1);
+            }
+            continue;
+        }
         wizardBallsArray[i].mesh.position.z -= wizardBallsArray[i].direction.y*GameOptions.wizardballSpeed*deltaTime;
         wizardBallsArray[i].mesh.position.x -= wizardBallsArray[i].direction.x*GameOptions.wizardballSpeed*deltaTime;
         wizardBallsArray[i].ttl-= deltaTime;
@@ -733,7 +790,15 @@ function moveWizardBalls(deltaTime){
 
 function moveFireballs(deltaTime){
     for(var i=fireBallsArray.length-1;i>=0;i--){
+        if(!fireBallsArray[i]) continue;
         fireBallsArray[i].moveSprite(deltaTime);
+        if(fireBallsArray[i].exploding){
+            if(fireBallsArray[i].exploded) {
+                scene.remove(fireBallsArray[i].mesh);
+                fireBallsArray.splice(i,1);  
+            }     
+            continue;
+        }
         fireBallsArray[i].mesh.position.z += Math.cos(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed*deltaTime;
         fireBallsArray[i].mesh.position.x += Math.sin(fireBallsArray[i].direction.y)*GameOptions.fireballSpeed*deltaTime;
         fireBallsArray[i].ttl-= deltaTime;
@@ -767,17 +832,17 @@ function handleControls(deltaTime){
         if(!wallCollision(pg.position.z-offZ)) pg.position.z -= offZ;
         if(!wallCollision(pg.position.x-offX)) pg.position.x -= offX;
     }
-    if(PressedKeys.A){
+    if(PressedKeys.Q){
         pg.rotation.y += GameOptions.cameraSpeedX*deltaTime;
     }
-    if(PressedKeys.D){
+    if(PressedKeys.E){
         pg.rotation.y -= GameOptions.cameraSpeedX*deltaTime;
     }
-    if(PressedKeys.E){
+    if(PressedKeys.D){
         if(!wallCollision(pg.position.z+ offX)) pg.position.z += offX;
         if(!wallCollision(pg.position.x- offZ)) pg.position.x -= offZ;
     }
-    if(PressedKeys.Q){
+    if(PressedKeys.A){
         if(!wallCollision(pg.position.z- offX)) pg.position.z -= offX;
         if(!wallCollision(pg.position.x + offZ)) pg.position.x += offZ;
     }
@@ -896,6 +961,12 @@ function animate(time) {
        camera.lookAt(pg.position.x,0.7,pg.position.z);
 
     } else if (gameStat == GameStatus.Starting){
+        wasd.style.display="block";
+        arrows.style.display="block";
+        spacebar.style.display="block";
+        wasd.style.opacity -= 0.001 * deltaTime;
+        arrows.style.opacity -= 0.001 * deltaTime;
+        spacebar.style.opacity -= 0.001 * deltaTime;
         if(timetoanimate<=1){
             animateCamera();
             camera.lookAt(pg.position.x,0.7,pg.position.z);
@@ -916,6 +987,9 @@ function animate(time) {
         }
         
     } else if (gameStat == GameStatus.Playng){
+        wasd.style.opacity -= 0.001 * deltaTime;
+        arrows.style.opacity -= 0.001 * deltaTime;
+        spacebar.style.opacity -= 0.001 * deltaTime;
             handleControls(deltaTime);
             moveFireballs(deltaTime);
             moveSkeleton(time,deltaTime);
@@ -949,6 +1023,9 @@ function animate(time) {
             }
             
     } else if (gameStat == GameStatus.Win){
+        wasd.style.display="none";
+        arrows.style.display="none";
+        spacebar.style.display="none";
         if(wave < GameOptions.waves.length) {
             //Cleaning up
             TWEEN.removeAll();
@@ -966,7 +1043,7 @@ function animate(time) {
             overlayDiv.style.display = 'block';
             gameStat = GameStatus.ChoosingUpgrade;
         }else{
-            console.log("Game Won!");
+            //console.log("Game Won!");
             overlayDiv.style.display = 'block';
             gameWonDiv.style.display = 'block';
             tryagainBtn.style.display = 'block';
@@ -976,7 +1053,14 @@ function animate(time) {
             gameWonDiv.textContent = 'Congratulations!'
         }
     } else if (gameStat == GameStatus.Lost){
-        console.log("Game Over!")
+        wasd.style.display="none";
+        arrows.style.display="none";
+        spacebar.style.display="none";
+        moveFireballs(deltaTime);
+        moveSkeleton(time,deltaTime);
+        moveWizard(time);
+        moveWizardBalls(deltaTime);
+        //console.log("Game Over!")
         overlayDiv.style.display = 'block';
         gameWonDiv.style.display = 'block';
         tryagainBtn.style.display = 'block';
