@@ -496,9 +496,9 @@ function onDocumentKeyDown(event) {
     } else if (keyCode == 68) {
         PressedKeys.D = true;
     }
-      else if (keyCode == 81||keyCode == 37) {
+      else if (keyCode == 37) {
         PressedKeys.Q = true;
-    } else if (keyCode == 69||keyCode==39) {
+    } else if (keyCode==39) {
         PressedKeys.E = true;
     } else if (keyCode == 32) {
         if(!PressedKeys.Space && gameStat==GameStatus.Playng) fire();
@@ -520,9 +520,9 @@ function onDocumentKeyUp(event) {
         PressedKeys.A = false;
     } else if (keyCode == 68) {
         PressedKeys.D = false;
-    }else if (keyCode == 81||keyCode == 37) {
+    }else if (keyCode == 37) {
         PressedKeys.Q = false;
-    } else if (keyCode == 69||keyCode==39) {
+    } else if (keyCode==39) {
         PressedKeys.E = false;
     }  else if (keyCode == 32) {
         PressedKeys.Space = false;
